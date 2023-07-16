@@ -14,7 +14,7 @@ You must have the following specifications to run this engine:
 	-	At least 500 KB for the entire ICESRC folder
 	-	At least 27 MB for both the ICESRC and WATCOM folders
 
-I recommend you place the ICESRC folder in your mounted DOSBox C: drive, but you can place it anywhere.
+Rename the extracted IceMoonGameEngine-main folder to ICESRC, then place it in your mounted DOSBox C: drive.
 
   ------
 
