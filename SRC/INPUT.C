@@ -137,7 +137,8 @@ void inputKeyboard()
     if (kbd_keyPressed(V))
         noclip = !noclip;   // Toggle noclip
 
-    maxSpeed = 6.0f * (kbd_keyDown(CTRL) + 1);  // Calculate maximum speed depending if the player holds down CTRL.
+    maxSpeed = 3.0f * (kbd_keyDown(CTRL) + 1);      // Calculate maximum speed
+    acceleration = 10.0f * (kbd_keyDown(CTRL) + 1); // Calculate acceleration
     if (!chat_mode) //  If chat isn't open,
     {
         if (mouseDetect == true)    // If mouse is plugged in,
@@ -164,9 +165,9 @@ void inputKeyboard()
             if (kbd_keyDown(E)) interactKey();
         }
 
-        axis_keyDown[0] = kbd_keyDown(W) - kbd_keyDown(S);            //  Whether the player is going forward or backward
-        axis_keyDown[1] = kbd_keyDown(D) - kbd_keyDown(A);            //  Left or right
-        axis_keyDown[2] = kbd_keyDown(SPACE) - kbd_keyDown(L_SHIFT);  //  Up or down
+        axis_keyDown[0] = (kbd_keyDown(W) - kbd_keyDown(S)) * maxSpeed;            //  Whether the player is going forward or backward
+        axis_keyDown[1] = (kbd_keyDown(D) - kbd_keyDown(A)) * maxSpeed;            //  Left or right
+        axis_keyDown[2] = (kbd_keyDown(SPACE) - kbd_keyDown(L_SHIFT)) * maxSpeed;  //  Up or down
 
         if (kbd_keyPressed(F)) // Switch map
         {
@@ -191,9 +192,9 @@ void inputKeyboard()
     {
         if (axis_keyDown[i] != 0.0f)    //  If that axis is held down,
         {
-            if (axis_keyDown[i] == 1.0f)        //  If holding W, D, or SPACE,
+            if (axis_keyDown[i] > 0.0f)        //  If holding W, D, or SPACE,
                 axis_speed[i] += acceleration * (axis_speed[i] <= maxSpeed) * deltaTime;    //  Increase speed if its below its maximum limit.
-            else if (axis_keyDown[i] == -1.0f)  //  Else, if holding S, A, or SHIFT,
+            else if (axis_keyDown[i] < 0.0f)  //  Else, if holding S, A, or SHIFT,
                 axis_speed[i] -= acceleration * (axis_speed[i] >= -maxSpeed) * deltaTime;   //  Increase reverse speed if its above its maximum negative limit.
         }
         else if (axis_speed[i] != 0.0f) //  Otherwise, if that axis speed isn't zero,

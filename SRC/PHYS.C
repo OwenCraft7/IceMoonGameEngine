@@ -46,42 +46,47 @@ bool rayTriangle_intersection(vec3 Origin, vec3 Destination, vec3 TriA, vec3 Tri
 
 void playerPhysicsUpdate()
 {
-	//  Calculate velocity for the X and Z axes,
-	velocity.x = deltaTime * ((sin(camRotX) * axis_speed[0]) + (cos(camRotX) * axis_speed[1]));
-	velocity.z = deltaTime * ((cos(camRotX) * axis_speed[0]) - (sin(camRotX) * axis_speed[1]));
-	//  Then add the player's position with the calculated velocity.
+	//	Initialize previous player position
 	prevPlayerPos.x = playerPos.x; prevPlayerPos.y = playerPos.y; prevPlayerPos.z = playerPos.z;
-	playerPos.x += velocity.x; playerPos.z += velocity.z;
+	
 
 	if (!noclip)
 	{
-		if (axis_keyDown[2] == 1.0f && playerIsTouchingGround)  // If space bar is held down
+		//  Calculate velocity for the X and Z axes,
+		velocity.x = deltaTime * ((sin(camRotX) * axis_speed[0]) + (cos(camRotX) * axis_speed[1]));
+		velocity.z = deltaTime * ((cos(camRotX) * axis_speed[0]) - (sin(camRotX) * axis_speed[1]));
+
+		if (axis_keyDown[2] > 0.0f && playerIsTouchingGround)  // If space bar is held down and player is on the ground
 		{
-			velocity.y = playerJumpVelocity; // Update player's Y velocity to jump
-			playerIsTouchingGround = false; // Player is in the air
+			velocity.y = playerJumpVelocity;	// Update player's Y velocity to jump
+			playerIsTouchingGround = false;		// Player is in the air
 		}
-		else if (!playerIsTouchingGround)                       // If player is in the air
+		else if (!playerIsTouchingGround)            // Else, if player is in the air
 		{
 			velocity.y += deltaTime * g_constant;    // Increase or decrease Y velocity depending on the gravity
 			if (velocity.y < terminal_velocity)      // Also check for terminal velocity
 				velocity.y = terminal_velocity;
 		}
 		else
-			velocity.y = 0.0f;	// If player is touching the ground, set Y velocity to 0.
+			velocity.y = 0.0f;	// If player is touching the ground and there's no space bar pressed, set Y velocity to 0.
 
-		playerPos.y += deltaTime * velocity.y;
+		playerPos.y += deltaTime * velocity.y;			// Update player's Y position
 		playerIsTouchingGround = (playerPos.y < 0.0f);
-		if (playerIsTouchingGround)
-			playerPos.y = 0.0f;
+		if (playerIsTouchingGround)						// The player is touching the ground if it goes below Y=0.
+			playerPos.y = 0.0f;	// Send the player back up.
 	}
 	else
 	{
-		velocity.y = deltaTime * axis_speed[2];
+		//  Calculate velocity for all three axes,
+		velocity.x = deltaTime * ((sin(camRotX) * axis_keyDown[0]) + (cos(camRotX) * axis_keyDown[1]));
+		velocity.y = deltaTime * axis_keyDown[2];
+		velocity.z = deltaTime * ((cos(camRotX) * axis_keyDown[0]) - (sin(camRotX) * axis_keyDown[1]));
 		playerPos.y += velocity.y;
 	}
+	playerPos.x += velocity.x; playerPos.z += velocity.z;
 
 	if (prevPlayerPos.x != playerPos.x || prevPlayerPos.y != playerPos.y || prevPlayerPos.z != playerPos.z)
-		playerMovement = true;
+		playerMovement = true;	// When true, the level screen buffer will refresh.
 
 	// The player's head is 1.7 meters high, and the eye height is always 0.2 meters below.
 	headPosY = 1.7f;
