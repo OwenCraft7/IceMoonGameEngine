@@ -9,19 +9,16 @@ You must have the following specifications to run this engine:
 -	RAM:	8 MB or above
 -	GPU:	VGA or better
 -	OS:		MS-DOS 5.0 or above
--	Storage (Updated as of 7/16th/2023):
-	-	At least 400 KB for the BIN folder in ICESRC
-	-	At least 500 KB for the entire ICESRC folder
-	-	At least 27 MB for both the ICESRC and WATCOM folders
+-	Storage (Updated as of 7/16th/2023): At least 26.1 MB
 
-Rename the extracted IceMoonGameEngine-main folder to ICESRC, then place it in your mounted DOSBox C: drive.
+First, rename the extracted IceMoonGameEngine-main folder to ICESRC, then place it in your mounted DOSBox C: drive.
 
   ------
 
 Next, install Open Watcom 2.0 from this link:
 https://github.com/open-watcom/open-watcom-v2/releases
 
-Find the current build and click the Assets drop-down arrow, then click on the file that end in "-c-dos.exe".
+Find the current build and click the Assets drop-down arrow, then click on the file that ends in "-c-dos.exe".
 
 If the above link doesn't work, download it from here instead:
 https://web.archive.org/web/20230716115926/https://github.com/open-watcom/open-watcom-v2/releases
@@ -58,4 +55,4 @@ If you don't have DOSBox version 0.74-3, change "DOSBox-0.74-3" in both "Target:
 
 Excellent, you are now ready to test the Ice Moon engine! Feel free to share your feedback, suggestions, or changes to the engine. You can look in the DOC folder to see documentation of some of the game's assets.
 
-I also want to mention that I'm not an experienced C programmer or a GitHub user, so for any experts, please tell me how I can optimize my code and make this repository more user-friendly. Thank you!
+I also want to mention that I'm not an experienced C programmer and GitHub user, so for any experts, please tell me how I can optimize my code, fix errors, and make this repository more user-friendly. Thank you!
