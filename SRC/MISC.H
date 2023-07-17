@@ -25,7 +25,7 @@ vec3 dummyTri[3] = { 0, 0, 2,
 					2, 0, -2 };
 float camRotX, camRotY, camPosY, headPosY;
 
-bool noclip = false, paused = false, chat_mode = false;
+bool noclip = false, paused = false, chat_mode = false, onSecondMap = true;
 char mod_folder[9];
 
 static inline void swapfloat(float* var1, float* var2);

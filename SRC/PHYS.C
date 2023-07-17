@@ -49,7 +49,6 @@ void playerPhysicsUpdate()
 	//	Initialize previous player position
 	prevPlayerPos.x = playerPos.x; prevPlayerPos.y = playerPos.y; prevPlayerPos.z = playerPos.z;
 	
-
 	if (!noclip)
 	{
 		//  Calculate velocity for the X and Z axes,

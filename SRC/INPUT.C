@@ -97,7 +97,6 @@ int kbd_keyPressed(enum kbd_KeyCode key)    // check if key was pressed - will r
         keysPressed[key] = 1;
         return 1;
     }
-
     return 0;
 }
 
@@ -184,25 +183,23 @@ void inputKeyboard()
     //  Limit player X rotation between -180 and 180 degrees, and make it wrap around.
     if (camRotX > PI)               camRotX = -PI + 0.001f;
     else if (camRotX < -PI)         camRotX = PI - 0.001f;
-    //  Limit player Y rotation between -90 and 90 degrees.
+    // Limit player Y rotation between -90 and 90 degrees.
     if (camRotY > HALF_PI)          camRotY = HALF_PI;
     else if (camRotY < -HALF_PI)    camRotY = -HALF_PI;
     
-    for (i = 0; i < 2 + noclip; i++) //  For the Front-Back and Left-Right axes of movement,
+    for (i = 0; i < 2 + noclip; i++)    // For each axis of movement,
     {
-        if (axis_keyDown[i] != 0.0f)    //  If that axis is held down,
+        if (axis_speed[i] < axis_keyDown[i])
         {
-            if (axis_keyDown[i] > 0.0f)        //  If holding W, D, or SPACE,
-                axis_speed[i] += acceleration * (axis_speed[i] <= maxSpeed) * deltaTime;    //  Increase speed if its below its maximum limit.
-            else if (axis_keyDown[i] < 0.0f)  //  Else, if holding S, A, or SHIFT,
-                axis_speed[i] -= acceleration * (axis_speed[i] >= -maxSpeed) * deltaTime;   //  Increase reverse speed if its above its maximum negative limit.
+            axis_speed[i] += acceleration * deltaTime;    // Increase speed if its below its maximum limit.
+            if (axis_speed[i] > axis_keyDown[i])
+                axis_speed[i] = axis_keyDown[i];
         }
-        else if (axis_speed[i] != 0.0f) //  Otherwise, if that axis speed isn't zero,
+        else if (axis_speed[i] > axis_keyDown[i])
         {
-            prev_speed = axis_speed[i]; //  Record previous speed before update
-            axis_speed[i] += acceleration * ((axis_speed[i] < 0.0f) - (axis_speed[i] > 0.0f)) * deltaTime;  // Update speed by moving it towards zero.
-            if (sgn(prev_speed) != sgn(axis_speed[i]))  //  If previous and current speeds have different signs,
-                axis_speed[i] = 0.0f;   //  Set speed to zero.
+            axis_speed[i] -= acceleration * deltaTime;    // Increase speed if its above its negative maximum limit.
+            if (axis_speed[i] < axis_keyDown[i])
+                axis_speed[i] = axis_keyDown[i];
         }
     }
 }

@@ -6,6 +6,11 @@ bool mouseLeftDown, mouseRightDown;
 bool mouseLeftPressed, mouseRightPressed;
 int mouseX, mouseY, mouseClick;
 
+enum mouse_KeyCode
+{
+    MOUSE_LEFT = 1, MOUSE_RIGHT = 2, MOUSE_BOTH = 3
+};
+
 static inline int mouseInit(void);
 
 #endif

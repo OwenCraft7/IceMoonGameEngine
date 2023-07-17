@@ -28,13 +28,6 @@ enum kbd_KeyCode
     DEL = 83
 };
 
-enum mouse_KeyCode
-{
-    MOUSE_LEFT = 1, MOUSE_RIGHT = 2, MOUSE_BOTH = 3
-};
-
-bool onSecondMap = true;
-
 const uint16_t *kbd_updateInput();
 
 static inline int kbd_keyDown(enum kbd_KeyCode key);
