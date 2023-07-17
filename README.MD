@@ -3,9 +3,7 @@ This is a 3D game engine I created in MS-DOS.
 
 ![Alt text](PREVIEW.PNG?raw=true "Preview of the engine.")
 
-If you want to try this engine yourself, follow this setup.
-
-This setup assumes you have DOSBox 0.74-3 installed. You can test this on real hardware too.
+If you want to try this engine yourself, follow this setup. This setup assumes you have DOSBox 0.74-3 installed, but you can test this on real hardware too.
 
 You must have the following specifications to run this engine:
 
@@ -51,7 +49,7 @@ Alternatively, you can type "play" to quick-launch the game instead if you don't
 
 For Windows users, a shortcut is provided for your pleasure, along with these instructions.
 
-First, open "ICEMOON.CONF", scroll to the bottom, and change "Owen" to your username. Next, right click "ICEMOON.CONF" and click "Copy As Path", then open the shortcut's properties. Select everything after "-conf" in "Target:" and paste your text.
+First, open "ICEMOON.CONF", scroll to the bottom, and change the file path after "mount c" to your DOSBox C: drive location. Next, right click "ICEMOON.CONF" and click "Copy As Path", then open the shortcut's properties. Select everything after "-conf" in "Target:" and paste your text.
 
 If you don't have DOSBox version 0.74-3, change "DOSBox-0.74-3" in both "Target:" and "Start in:" to your version. (You'll want to change your DOSBox installation path too if it doesn't match the one in the properties.) Finally, open the shortcut.
 
