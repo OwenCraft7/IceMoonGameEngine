@@ -7,6 +7,8 @@ union REGS in, out;
 
 bool endGameLoop;   // Detect if game has ended.
 int errormessage;   // In case the game screws up, send an error message.
+int mapNumber = 0;		// The map the player is in.
+bool mapCycled = false;
 
 const double PI = 3.1415926535897932384626433832795;
 const double HALF_PI = 1.5707963267948966192313216916398;
@@ -25,7 +27,7 @@ vec3 dummyTri[3] = { 0, 0, 2,
 					2, 0, -2 };
 float camRotX, camRotY, camPosY, headPosY;
 
-bool noclip = false, paused = false, chat_mode = false, onSecondMap = true;
+bool noclip = false, paused = false, chat_mode = false;
 char mod_folder[9];
 
 static inline void swapfloat(float* var1, float* var2);

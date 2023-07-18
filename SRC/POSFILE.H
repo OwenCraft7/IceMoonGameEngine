@@ -18,9 +18,10 @@ typedef struct
 } node;
 typedef struct
 {
-    float x, y, z, x_rotation;
-    int settings[2];
     int type;
+    vec3 position;
+    float x_rotation, y_rotation;
+    float misc[8];
 } entity;
 
 int vert_count = 0, uv_count = 0, tri_count = 0, node_count = 0, leaf_count = 0, texture_count = 0, entity_count = 0;

@@ -168,14 +168,36 @@ void inputKeyboard()
         axis_keyDown[1] = (kbd_keyDown(D) - kbd_keyDown(A)) * maxSpeed;            //  Left or right
         axis_keyDown[2] = (kbd_keyDown(SPACE) - kbd_keyDown(L_SHIFT)) * maxSpeed;  //  Up or down
 
-        if (kbd_keyPressed(F)) // Switch map
+        if (kbd_keyPressed(R)) // Cycle map left
         {
-            if (onSecondMap)                        // If on second map,
-                load_pos("MAPS/TEST.POS");  // Switch to first map.
-            else
-                load_pos("MAPS/TEST2.POS"); // Otherwise, switch back to second map.
-            onSecondMap = !onSecondMap;
+            mapNumber--;
+            if (mapNumber < 0)
+                mapNumber = 2;
+            mapCycled = true;
+        }
+        if (kbd_keyPressed(F)) // Cycle map right
+        {
+            mapNumber++;
+            if (mapNumber > 2)
+                mapNumber = 0;
+            mapCycled = true;
+            
+        }
+        if (mapCycled)
+        {
+            mapCycled = false;
             playerMovement = true;
+            switch (mapNumber)
+            {
+                case 0:
+                    load_pos("MAPS/TEST.POS");
+                    break;
+                case 1:
+                    load_pos("MAPS/TEST2.POS");
+                    break;
+                case 2:
+                    load_pos("MAPS/TEST3.POS");
+            }
         }
     }
     else axis_keyDown[0] = axis_keyDown[1] = axis_keyDown[2] = 0.0f;   // If chat IS open, make sure the player isn't moving without keyboard control.

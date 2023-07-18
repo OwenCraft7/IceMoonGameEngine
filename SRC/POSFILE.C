@@ -27,7 +27,7 @@ void free_mapdata()
 void load_pos(const char* file)
 {
     FILE *map;
-    int i;
+    int i, j;
     char texture[13], tx_string[31], filepath[23];
 
     sprintf(filepath, "%s/%s", mod_folder, file);
@@ -101,12 +101,14 @@ void load_pos(const char* file)
         }
         for (i = 0; i < entity_count; i++)
         {
-            fread(&map_entity[i].x, 4, 1, map);
-            fread(&map_entity[i].y, 4, 1, map);
-            fread(&map_entity[i].z, 4, 1, map);
-            fread(&map_entity[i].x_rotation, 4, 1, map);
-            fread(&map_entity[i].settings[0], 4, 1, map); fread(&map_entity[i].settings[1], 4, 1, map);
             fread(&map_entity[i].type, 2, 1, map);
+            fread(&map_entity[i].position.x, 4, 1, map);
+            fread(&map_entity[i].position.y, 4, 1, map);
+            fread(&map_entity[i].position.z, 4, 1, map);
+            fread(&map_entity[i].x_rotation, 4, 1, map);
+            fread(&map_entity[i].y_rotation, 4, 1, map);
+            for (j = 0; j < 8; j++)
+                fread(&map_entity[i].misc[j], 4, 1, map);
         }
     }
     CANCEL: // If the map loading process screws up, go to this label.

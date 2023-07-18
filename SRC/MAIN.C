@@ -31,7 +31,7 @@
 
 int main(int argc, char **argv[])
 {
-    int i, j, k;           // Used with for-statements and other
+    int i, j;           // Used with for-statements and other
 
     // Visual and active page variables used for Mode X page flipping.
     int visual_page = 0;
@@ -56,7 +56,7 @@ int main(int argc, char **argv[])
             mouseDetect = false;
     }
 
-    load_pos("MAPS/TEST2.POS");    // Load the main map
+    load_pos("MAPS/TEST.POS");    // Load the main map
 
     font_count = 2;
     fontnumber = calloc(font_count, sizeof(image));   // Allocate memory for fonts to be loaded
@@ -129,7 +129,7 @@ int main(int argc, char **argv[])
         drawimage(imgnumber[5], 288, 208);  // Ammo
         drawimage(imgnumber[3], 156, 116);  // Crosshair
 
-        snprintf(debug_line[0], CHAT_LINE_LENGTH, "FPS: %d, Noclip: %d, Folder: %s", framesPerSecond, noclip, mod_folder);
+        snprintf(debug_line[0], CHAT_LINE_LENGTH, "FPS: %d, Noclip: %d, Map: %d", framesPerSecond, noclip, mapNumber);
         //snprintf(debug_line[1], CHAT_LINE_LENGTH, "Leaf: %d, Crosshair Distance: %.2fm", playerLeaf, dist_buffer[120][160]);
         //snprintf(debug_line[2], CHAT_LINE_LENGTH, "LP: %d, RP: %d, LD: %d, RD: %d", mouseLeftPressed, mouseRightPressed, mouseLeftDown, mouseRightDown);
         snprintf(debug_line[1], CHAT_LINE_LENGTH, "Coordinates: %.2f, %.2f, %.2f", playerPos.x, playerPos.y, playerPos.z);
@@ -158,9 +158,8 @@ int main(int argc, char **argv[])
                 outp(SC_DATA, 1 << i);
 
                 // Draw 1/4th of the screen:
-                for (j = 0; j < 240; j++)
-                    for (k = i; k < 320; k += 4)
-                        VGA[nonVisible + (j << 6) + (j << 4) + (k >> 2)] = col_buffer[j][k]; // The very moment we set a pixel in VGA memory
+                for (j = i; j < 76800; j += 4)
+                    VGA[nonVisible + (j >> 2)] = col_buffer[0][j]; // Set pixel from color buffer to VGA memory
             }
             // Flip Mode X pages
             flip(&visual_page, &active_page);

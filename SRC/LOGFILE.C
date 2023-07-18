@@ -61,9 +61,9 @@ void logfile()
     }
 
     fprintf(log, "\n\nEntity List:");
-    fprintf(log, "\n    X,  Y,  Z,  X-Rotation, S0, S1, Type");
+    fprintf(log, "\n    Type,    X, Y, Z,    X-Rotation, Y-Rotation,    Misc0, Misc1, Misc2, Misc3, Misc4, Misc5, Misc6, Misc7");
     for (i = 0; i < entity_count; i++)
-        fprintf(log, "\n    %.2f, %.2f, %.2f, %.2f,    %d, %d,    %d", map_entity[i].x, map_entity[i].y, map_entity[i].z, map_entity[i].x_rotation, map_entity[i].settings[0], map_entity[i].settings[1], map_entity[i].type);
+        fprintf(log, "\n    %d,    %.2f, %.2f, %.2f,    %.2f, %.2f,    %d, %d, %d, %d, %d, %d, %d, %d", map_entity[i].type, map_entity[i].position.x, map_entity[i].position.y, map_entity[i].position.z, map_entity[i].x_rotation, map_entity[i].y_rotation, map_entity[i].misc[0], map_entity[i].misc[1], map_entity[i].misc[2], map_entity[i].misc[3], map_entity[i].misc[4], map_entity[i].misc[5], map_entity[i].misc[6], map_entity[i].misc[7]);
 
     fprintf(log, "\n\nImage List:");
     fprintf(log, "\n    Width,  Height");
