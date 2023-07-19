@@ -7,7 +7,7 @@ If you want to try this engine yourself, follow this setup. This setup assumes y
 
 You must have the following specifications to run this engine:
 
--	CPU:	Intel Pentium 75 MHz or above
+-	CPU:	Intel Pentium 85 MHz or above
 -	RAM:	8 MB or above
 -	GPU:	VGA or better
 -	OS:		MS-DOS 5.0 or above
