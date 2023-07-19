@@ -13,8 +13,4 @@ Color Blend Map: (For translucent images and textures)
 Color Multiply Map: (For lighting)
 	Top Side: Texture Pixel
 	Left Side: Light Pixel
-	Result = 0.729 x Light + 0.271 x Texture;
-	
-	Note: The result isn't a simple Light x Texture for two reasons:
-		1. To fake ambient lighting, and
-		2. Remove diagonally duplicated pixels
+	Result = Light x Texture;
