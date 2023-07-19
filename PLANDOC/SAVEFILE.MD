@@ -17,14 +17,20 @@ float player_X, player_Y, player_Z, camRotation_X, camRotation_y;
 float velocity_X, velocity_Y, velocity_Z;
 
 char save_mod_number[mod_count][8];
-char save_sfx_number[sfx_count][8];
+sfx save_sfx_number[sfx_count];
 entity save_entity_number[entity_count];
 
-entity{
+sfx
+{
+	char name[8];
+	float time;
+}
+entity
+{
+	uint16 type;
 	float x, y, z, x_rotation, y_rotation;
 	float entityVelocity_X, entityVelocity_Y, entityVelocity_Z;
-	uint16 type;
-	uint32 beginning_settings; // 4 bytes of settings for every entity defined in the .POS file
-	uint32 save_settings;
-	uint8 entityState, entityStateKeyframe;
+	float misc[8]; // 8 custom float variables for every entity
+	float mainAnimTime, facialAnimTime;
+	uint8 mainAnimation, facialAnimation;
 }
