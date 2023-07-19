@@ -48,6 +48,8 @@ void printtext(const char* text, int number, const int x, const int y)  // Print
     for (char_num = 0; char_num < strlen(text); char_num++) // For every char in the string,
     {
         shift_x = x + total_length;     // X screen position of top-left of char
+        if (char_num == typeXPosition_Text)  // This focuses on the chat text cursor
+            typeXPosition_Screen = shift_x;
         if (shift_x < 321 - grid_width) // If char is far enough from the right of the screen, print the char
         {
             char_width = vwf_list[(int)text[char_num]];
@@ -77,13 +79,27 @@ void display_chat() // Prints all the debug and chat-related text on screen
     for (i = 0; i < 3; i++)
         printtext(debug_line[i], FONT_DEBUG, 0, i * 8);
     for (i = 0; i < 20; i++)
-        if (chat_timer[i] > 0.0f)
+        if (chat_mode || chat_timer[i] > 0.0f)
         {
             printtext(chat_line[i], FONT_CHAT, 0, i * 8 + 24);
             chat_timer[i] -= deltaTime;
         }
     if (chat_mode)
+    {
         printtext(type_line, FONT_CHAT, 0, 200);
+        if (typeCursorVisible)
+            drawimage(imgnumber[7], typeXPosition_Screen, 200);
+    }
+}
+
+void scrollChatUp()
+{
+    int i;
+    for (i = 0; i < 18; i++)
+    {
+        strcpy(chat_line[i], chat_line[i + 1]);
+        chat_timer[i] = chat_timer[i + 1];
+    }
 }
 
 void free_fonts()

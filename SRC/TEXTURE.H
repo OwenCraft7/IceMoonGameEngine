@@ -9,4 +9,7 @@ float alpha_toggle;  // If texture has transparency or translucency, disable bac
 int bit_imgwidth, bit_imgsize;
 float f_width, f_size;
 
+int adx[2], ady[2], sdx[2], x[2], reversed;
+float slope[4][2], edge[4][2];
+
 #endif

@@ -6,9 +6,9 @@
 
 #include "PHYS.H"
 
-bool rayTriangle_intersection(vec3 Origin, vec3 Destination, vec3 TriA, vec3 TriB, vec3 TriC, vec3* Intersect)
+bool rayTriangle_intersection(vert Origin, vert Destination, vert TriA, vert TriB, vert TriC, vert* Intersect)
 {
-	vec3 e1, e2, n, ao, dao, dir;
+	vert e1, e2, n, ao, dao, dir;
 	float det, invdet, t, u, v;
 
 	dir.x = Destination.x - Origin.x;
@@ -21,7 +21,7 @@ bool rayTriangle_intersection(vec3 Origin, vec3 Destination, vec3 TriA, vec3 Tri
 	e1.z = TriB.z - TriA.z;
 	e2.z = TriC.z - TriA.z;
 
-	cross(e1.x, e1.y, e1.z, e2.x, e2.y, e2.z, &n.x, &n.y, &n.z);
+	cross(e1.x, e1.y, e1.z, e2.x, e2.y, e2.z, &n);
 	det = -dot(dir, n);
 	if (det >= 0.000001)
 	{
@@ -29,7 +29,7 @@ bool rayTriangle_intersection(vec3 Origin, vec3 Destination, vec3 TriA, vec3 Tri
 		ao.x = Origin.x - TriA.x;
 		ao.y = Origin.y - TriA.y;
 		ao.z = Origin.z - TriA.z;
-		cross(ao.x, ao.y, ao.z, dir.x, dir.y, dir.z, &dao.x, &dao.y, &dao.z);
+		cross(ao.x, ao.y, ao.z, dir.x, dir.y, dir.z, &dao);
 		u = dot(e2, dao) * invdet;
 		v = -dot(e1, dao) * invdet;
 		t = dot(ao, n) * invdet;

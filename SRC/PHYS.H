@@ -11,6 +11,6 @@ float rotationSpeed = 0.25f, keyRotationSpeed = 2.25f;
 float axis_speed[3], axis_keyDown[3];
 bool playerMovement = true; //  If playerMovement is true, then the map will regenerate on screen.
 
-vec3 playerCollideIntersect, velocity;
+vert playerCollideIntersect, velocity;
 
 #endif

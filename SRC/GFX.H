@@ -50,4 +50,8 @@ color* multiply_map;
 float dist_buffer[240][320];
 unsigned char level_buffer[240][320], col_buffer[240][320];
 
+static inline void pixel(const int, const int, const char);
+static inline char blendColor(const char, const char);
+static inline char multiplyColor(const char, const char);
+
 #endif

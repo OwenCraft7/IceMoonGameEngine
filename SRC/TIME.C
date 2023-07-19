@@ -16,4 +16,5 @@ void updateFPS()    // Updates the FPS every quarter second.
     seconds_quarterSecondUpdate += 0.25f;
     framesPerSecond = (frames - frames_quarterSecondUpdate) * 4;
     frames_quarterSecondUpdate = frames;
+    typeCursorVisible = !typeCursorVisible; // The little vertical flashing line in the text toggles visibility every FPS update.
 }

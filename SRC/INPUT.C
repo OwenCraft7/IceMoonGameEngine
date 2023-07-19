@@ -59,12 +59,10 @@ void kbd_finish()   // restore the original keyboard irq handler - required if k
 // returns an integer array with each entry representing a keypress, mapped to KeyCode enum
 const uint16_t *kbd_updateInput()   
 {
-    uint8_t key = 0;
-
     // get last key and flush keyboard buffer
     _asm {
         in al, 60h
-        mov key, al
+        mov keyDown, al
         in al, 61h
         mov ah, al
         or al, 80h
@@ -78,13 +76,23 @@ const uint16_t *kbd_updateInput()
         int 21h
     }
 
-    if(key < 0x80)
-        keysDown[key] = 1;
+    if(keyDown < 0x80)
+        keysDown[keyDown] = 1;
     else
     {
-        key -= 0x80;
-        keysDown[key]    = 0;
-        keysPressed[key] = 0;
+        keyDown -= 0x80;
+        keysDown[keyDown]    = 0;
+        keysPressed[keyDown] = 0;
+    }
+    if (lastKeyDown != keyDown)
+    {
+        if (keyDown != '\0') aKeyPressed = true;
+        lastKeyDown = keyDown;
+    }
+    else
+    {
+        aKeyPressed = false;
+        keyDown = 0; lastKeyDown = 0;
     }
 
     return &keysDown[0];
@@ -111,6 +119,48 @@ static void kbd_flush() // clear pressed key states - not needed if using custom
     memset(keysPressed, 0, sizeof(uint16_t) * 0x81);
 }
 
+void detectKeysChat()
+{
+    typeXPosition_Text += kbd_keyPressed(RIGHT) - kbd_keyPressed(LEFT);
+    if (typeXPosition_Text < 0)
+        typeXPosition_Text = 0;
+    else if (typeXPosition_Text > typeLineLength)
+        typeXPosition_Text = typeLineLength;
+    else if (typeXPosition_Text > CHAT_LINE_LENGTH)
+        typeXPosition_Text = CHAT_LINE_LENGTH;
+    if (aKeyPressed)
+    {
+        typeXPosition_Text++;
+        if (typeXPosition_Text <= CHAT_LINE_LENGTH)
+        {
+            typeLineLength++;
+            if (typeLineLength <= CHAT_LINE_LENGTH)
+            {
+                memcpy(type_line + typeXPosition_Text, type_line + typeXPosition_Text - 1, typeLineLength - (typeXPosition_Text - 1));
+                type_line[typeXPosition_Text - 1] = keycodeToChar[keyDown + shiftKeyDown * 58];
+            }
+            else
+            {
+                typeXPosition_Text--;
+                typeLineLength = CHAT_LINE_LENGTH;
+            }
+        }
+        else
+            typeXPosition_Text = CHAT_LINE_LENGTH;
+    }
+    if (kbd_keyPressed(BACKSPACE))
+    {
+        typeXPosition_Text--;
+        if (typeXPosition_Text >= 0)
+        {
+            memcpy(type_line + typeXPosition_Text, type_line + typeXPosition_Text + 1, typeLineLength - typeXPosition_Text);
+            typeLineLength--;
+        }
+        else
+            typeXPosition_Text = 0;
+    }
+}
+
 void itemKey()
 {
 
@@ -125,21 +175,22 @@ void inputKeyboard()
 {
     int i;
     mouseStatus(&mouseX, &mouseY, &mouseClick); // Get mouse X & Y movement as well as click status.
-    
-    if (kbd_keyPressed(M)) // If M pressed,
-    {
-        mouseDetect = !mouseDetect; //  Toggle mouse and arrow keys for camera rotation and interaction.
-        mousePos(160, 120); // Center the mouse.
-    }
-    if (kbd_keyPressed(T))  // If T pressed,
-        chat_mode = !chat_mode; //  Toggle Chat. :)
-    if (kbd_keyPressed(V))
-        noclip = !noclip;   // Toggle noclip
 
     maxSpeed = 3.0f * (kbd_keyDown(CTRL) + 1);      // Calculate maximum speed
     acceleration = 10.0f * (kbd_keyDown(CTRL) + 1); // Calculate acceleration
+
+    shiftKeyDown = kbd_keyDown(L_SHIFT);
+
     if (!chat_mode) //  If chat isn't open,
     {
+        if (kbd_keyPressed(M)) // If M pressed,
+        {
+            mouseDetect = !mouseDetect; //  Toggle mouse and arrow keys for camera rotation and interaction.
+            mousePos(160, 120); // Center the mouse.
+        }
+        if (kbd_keyPressed(V))  // If V pressed,
+            noclip = !noclip;   // Toggle noclip
+
         if (mouseDetect == true)    // If mouse is plugged in,
         {
             //  Modify camera rotation based on mouse movement.
@@ -199,8 +250,28 @@ void inputKeyboard()
                     load_pos("MAPS/TEST3.POS");
             }
         }
+        /*if (kbd_keyPressed(T))  // If T pressed,
+        {
+            chat_mode = true; // Show chat
+            memset(type_line, 0x00, CHAT_LINE_WITHNULL);  // Clear text the user will type.
+            typeXPosition_Text = 0;
+            typeLineLength = 0;
+        }*/
     }
-    else axis_keyDown[0] = axis_keyDown[1] = axis_keyDown[2] = 0.0f;   // If chat IS open, make sure the player isn't moving without keyboard control.
+    else   // If chat is open,
+    {
+        axis_keyDown[0] = axis_keyDown[1] = axis_keyDown[2] = 0.0f; // Make sure the player can't move or look.
+        detectKeysChat();
+        if (kbd_keyPressed(ESC))  // If escape pressed,
+            chat_mode = false; // Hide chat
+        if (kbd_keyPressed(ENTER))  // Send a message with the enter key
+        {
+            scrollChatUp();
+            snprintf(chat_line[19], CHAT_LINE_LENGTH, "%s: %s", player_name, type_line);
+            chat_timer[19] = 6.0f;
+            chat_mode = false;
+        }
+    }
 
     //  Limit player X rotation between -180 and 180 degrees, and make it wrap around.
     if (camRotX > PI)               camRotX = -PI + 0.001f;

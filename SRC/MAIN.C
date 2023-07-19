@@ -20,13 +20,13 @@
 #include "TIME.C"       // Calculates the delta time and FPS.
 #include "SOUND.C"      // Handles SFX and music.
 #include "GFX.C"        // Code for graphics, loading, and drawing images. Some of the code comes from Brackeen's VGA tutorial.
-#include "TEXT.C"       // Prints text for chat, debug, HUD, menus, and subtitles.
+#include "PHYS.C"       // Game Physics.
 #include "POSFILE.C"    // Loads maps.
+#include "MOUSE.C"      // Input from mouse.
+#include "TEXT.C"       // Prints text for chat, debug, HUD, menus, and subtitles.
+#include "INPUT.C"      // Input from keyboard. INPUT.C & INPUT.H are from Krzysztof Kondrak's DOS3D program.
 #include "TEXTURE.C"    // Draws triangles from the node leaves.
 #include "NODES.C"      // Involved with the BSP tree; checks node planes and draws node leaves.
-#include "MOUSE.C"      // Input from mouse.
-#include "PHYS.C"       // Game Physics.
-#include "INPUT.C"      // Input from keyboard. INPUT.C & INPUT.H are from Krzysztof Kondrak's DOS3D program.
 #include "LOGFILE.C"    // Prints a log file after the game ends.
 
 int main(int argc, char **argv[])
@@ -64,7 +64,7 @@ int main(int argc, char **argv[])
     loadfont("CHAT_0", FONT_CHAT);
     loadfont("DEBUG_0", FONT_DEBUG);
 
-    img_count = 7;
+    img_count = 8;
     imgnumber = calloc(img_count, sizeof(image));   // Allocate memory for images to be loaded
     loadimage("NULL.BMP", &imgnumber[0]);
     loadimage("COLMAPS/BLEND.BMP", &imgnumber[1]);      // A colormap used to blend two pixel colors
@@ -73,6 +73,7 @@ int main(int argc, char **argv[])
     loadimage("GUI/HEALTH.BMP", &imgnumber[4]);
     loadimage("GUI/AMMO.BMP", &imgnumber[5]);
     loadimage("GUI/CURSOR.BMP", &imgnumber[6]);
+    loadimage("GUI/TYPE.BMP", &imgnumber[7]);
 
     // Shortcuts to the blend and multiply colormaps. Each colormap is both 256x256 pixels in size.
     blend_map = imgnumber[1].pixel;
@@ -106,10 +107,7 @@ int main(int argc, char **argv[])
         if (playerMovement == true)
         {
             /* Clear Buffers: */
-
-            // Remove this line at later development phase.
-            // Doing so will result in a hall-of-mirrors effect in out of bounds areas.
-            memset(level_buffer, 0x00, 76800);
+            memset(level_buffer, BACKGROUND_COLOR, 76800);
 
             // Sets each pixel in distance buffer to 195.263f. (MAXIMUM VIEW DISTANCE)
             memset(dist_buffer, 0x43, 307200);
@@ -129,7 +127,7 @@ int main(int argc, char **argv[])
         drawimage(imgnumber[5], 288, 208);  // Ammo
         drawimage(imgnumber[3], 156, 116);  // Crosshair
 
-        snprintf(debug_line[0], CHAT_LINE_LENGTH, "FPS: %d, Noclip: %d, Map: %d", framesPerSecond, noclip, mapNumber);
+        snprintf(debug_line[0], CHAT_LINE_LENGTH, "FPS: %d, Noclip: %d, Map: %d", framesPerSecond, noclip, mapNumber);// , aKeyPressed);
         //snprintf(debug_line[1], CHAT_LINE_LENGTH, "Leaf: %d, Crosshair Distance: %.2fm", playerLeaf, dist_buffer[120][160]);
         //snprintf(debug_line[2], CHAT_LINE_LENGTH, "LP: %d, RP: %d, LD: %d, RD: %d", mouseLeftPressed, mouseRightPressed, mouseLeftDown, mouseRightDown);
         snprintf(debug_line[1], CHAT_LINE_LENGTH, "Coordinates: %.2f, %.2f, %.2f", playerPos.x, playerPos.y, playerPos.z);
@@ -139,13 +137,11 @@ int main(int argc, char **argv[])
         else
             snprintf(debug_line[2], CHAT_LINE_LENGTH, "SoundBlaster is found at A%x I%u D%u.", sb_base, sb_irq, sb_dma);
 
-        snprintf(type_line, CHAT_LINE_LENGTH, "Typing display 123");
-
         display_chat(); // Displays debug text too
 
         if (mouseDetect == false)
             drawimage(imgnumber[6], mouseX, mouseY);
-        if (kbd_keyPressed(ESC))
+        if (kbd_keyPressed(ESC) && !chat_mode)
             endGameLoop = true;
 
         if (!endGameLoop)
@@ -205,6 +201,7 @@ int main(int argc, char **argv[])
     printf("Node Count: %d\nLeaf Count: %d\nTexture Count: %d\nEntity Count: %d\n\n", node_count, leaf_count, texture_count, entity_count);
     printf("Image Count: %d\nFont Count: %d\n\n", img_count, font_count);
     printf("Estimated RAM for these objects: %d Bytes\n", estimate_ram);
+    printf("Mod Folder: %s\nPlayer Name: %s\n", mod_folder, player_name);
 
     return 0;
 }

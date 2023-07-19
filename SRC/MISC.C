@@ -38,6 +38,12 @@ static void swapint(int* var1, int* var2)
     *var2 = temp;
 }
 
+static void fgets_noNewline(char* buffer, int maxCount, FILE* stream)
+{
+    fgets(buffer, maxCount, stream);
+    buffer[strcspn(buffer, "\n")] = 0;
+}
+
 float invsqrt(float var)
 {
     long i; float f = var;
@@ -47,17 +53,16 @@ float invsqrt(float var)
     return 0.703952253f * f * (2.38924456f - var * f * f);
 }
 
-static float dot(vec3 a, vec3 b)
+static float dot(vert a, vert b)
 {
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
-
-static void cross(float ax, float ay, float az, float bx, float by, float bz, float *cx, float *cy, float *cz)
+static void cross(float ax, float ay, float az, float bx, float by, float bz, vert *c)
 {
-    *cx = ay * bz - az * by;
-    *cy = az * bx - ax * bz;
-    *cz = ax * by - ay * bx;
+    c->x = ay * bz - az * by;
+    c->y = az * bx - ax * bz;
+    c->z = ax * by - ay * bx;
 }
 
 void loadCfg()
@@ -66,7 +71,8 @@ void loadCfg()
 
     if (!endGameLoop && (tempcfg = fopen("CONFIG.CFG", "r")) != NULL)
     {
-        fgets(mod_folder, 9, tempcfg);
+        fgets_noNewline(mod_folder, 9, tempcfg);
+        fgets(player_name, 21, tempcfg);
     }
     else
     {

@@ -24,7 +24,7 @@ void logfile()
     fprintf(log, "Images:      %d\n", img_count);
     fprintf(log, "Fonts:       %d", font_count);
 
-    estimate_ram = (vert_count * sizeof(vec3)) + (uv_count * sizeof(uv)) + (tri_count * sizeof(tri)) +
+    estimate_ram = (vert_count * sizeof(vert)) + (uv_count * sizeof(uv)) + (tri_count * sizeof(tri)) +
         (node_count * sizeof(node)) + (leaf_count * sizeof(int)) + (texture_count * sizeof(image)) +
         (entity_count * sizeof(entity)) + (img_count * sizeof(image)) + (font_count * sizeof(image));
 

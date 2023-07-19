@@ -50,7 +50,7 @@ void load_pos(const char* file)
         fread(&texture_count, 2, 1, map);
         fread(&entity_count, 2, 1, map);
         
-        map_vert = calloc(vert_count, sizeof(vec3));
+        map_vert = calloc(vert_count, sizeof(vert));
         map_uv = calloc(uv_count, sizeof(uv));
         map_tri = calloc(tri_count, sizeof(tri));
         map_node = calloc(node_count, sizeof(node));

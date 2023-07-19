@@ -19,13 +19,13 @@ typedef struct
 typedef struct
 {
     int type;
-    vec3 position;
+    vert position;
     float x_rotation, y_rotation;
     float misc[8];
 } entity;
 
 int vert_count = 0, uv_count = 0, tri_count = 0, node_count = 0, leaf_count = 0, texture_count = 0, entity_count = 0;
-vec3* map_vert;
+vert* map_vert;
 uv* map_uv;
 tri* map_tri;
 node* map_node;

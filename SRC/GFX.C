@@ -92,6 +92,16 @@ static void pixel(const int x, const int y, const char c)
     col_buffer[y][x] = c;
 }
 
+static char blendColor(const char oneThirdBlend, const char twoThirdBlend)
+{
+    return blend_map[oneThirdBlend + (twoThirdBlend << 8)].c;
+}
+
+static char multiplyColor(const char textureColor, const char lightColor)
+{
+    return multiply_map[textureColor + (lightColor << 8)].c;
+}
+
 void loadimage(const char* file, image* pointer)    // Only supports 256-color bitmaps, but will NOT work on bitmaps with exactly 256 colors.
 {
     int i, j, width, height;
@@ -141,28 +151,27 @@ void loadimage(const char* file, image* pointer)    // Only supports 256-color b
                 }
             }
         }
-        else goto IMPROVISE; // If image fails to allocate pixels to RAM, create an error image.
+        else goto IMPROVISE;    // If image fails to allocate pixels to RAM, create an error image.
     }
-    // If we can't find our image, then we'll have to make an error image.
+    else goto IMPROVISE;    // If we can't find our image, then we'll have to make an error image.
 
     goto SKIP;
     IMPROVISE:
-
     pointer->width = 8; pointer->height = 8; // It will be 8 * 8 pixels
     free(pointer->pixel);
     if ((pointer->pixel = calloc(64, sizeof(color))) != NULL)    // 8 * 8 pixels = 64
     {
         tempimgdata = pointer->pixel; // Reference to ingame image memory
         pointer->transparent = -1;
-        colvar = 0;
+        colvar = 3;
         for (i = 0; i < 8; i++)
         {
             for (j = (i << 3); j < (i << 3) + 8; j++)    // The checkerboard pattern is hardcoded into the game.
             {
-                tempimgdata[j].c = colvar;  // "colvar" starts out as 0. This is indicated as black in the color palette.
-                colvar ^= 255;  // XOR colvar to toggle between white and black.
+                tempimgdata[j].c = colvar;  // "colvar" starts out as 3. This is indicated as blue in the color palette.
+                colvar ^= 28;  // XOR colvar to toggle between blue and cyan.
             }
-            colvar ^= 255;
+            colvar ^= 28;
         }
     }
     else if (!endGameLoop)   // If image failed to allocate pixels to RAM, send error message #1.
