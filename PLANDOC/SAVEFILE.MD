@@ -16,9 +16,10 @@ uint16 entity_count;
 char map_name[8];	// Determines the map's location: "\MAPS\map_name.POS"
 uint32 playerDebugSettings;	// Contains info about debug status such as noclip
 uint8 item[5], item_value[5], item_maxValue[5];
-uint8 selectedItemSlot, playerState, playerStateKeyframe;
+uint8 selectedItemSlot, playerAnimation;
 float player_X, player_Y, player_Z, camRotation_X, camRotation_y;
 float velocity_X, velocity_Y, velocity_Z;
+float playerAnimTime;
 
 char save_mod_number[mod_count][8];
 sfx save_sfx_number[sfx_count];
