@@ -25,7 +25,7 @@ vert
 }
 uv
 {
-	float u, y, lx, ly;
+	float u, v, lx, ly;	// lx and ly are lightmap coordinates, though lightmaps haven't been implemented yet.
 }
 tri
 {
