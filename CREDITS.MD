@@ -5,10 +5,24 @@ Please know that I didn't write everything myself. Here is some code I borrowed 
 
   ------
 
+**256-Color VGA Programming in C**, by David Brackeen
+
+UNCHAIN.C & MODES.C
+
+http://www.brackeen.com/vga/index.html
+
+Portions of code in this tutorial are found in GFX.C.
+
+https://creativecommons.org/licenses/by-sa/2.5/legalcode
+
+  ------
+
+**DOS3D**, by Krzysztof Kondrak
+
 INPUT.C & INPUT.H
-From "DOS3D"
-By Krzysztof Kondrak,
+
 https://github.com/kondrak/dos3d
+
 This code has been heavily modified to respond to player input during gameplay.
 
 Copyright (c) 2017 Krzysztof Kondrak 
@@ -36,12 +50,3 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
-
-  ------
-
-UNCHAIN.C & MODES.C
-From "256-Color VGA Programming in C"
-By David Brackeen,
-http://www.brackeen.com/vga/index.html
-Portions of code in this tutorial are found in GFX.C.
-https://creativecommons.org/licenses/by-sa/2.5/legalcode
