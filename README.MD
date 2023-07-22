@@ -57,4 +57,4 @@ If you don't have DOSBox version 0.74-3, change "DOSBox-0.74-3" in both "Target:
 
 Excellent, you are now ready to test the Ice Moon engine! Feel free to share your feedback, suggestions, or changes to the engine. You can look in the DOC folder to see documentation of some of the game's assets.
 
-I also want to mention that I'm not an experienced C programmer and GitHub user, so for any experts, please tell me how I can optimize my code, fix errors, and make this repository more user-friendly. Thank you!
+I also want to mention that I'm not an experienced C programmer nor experienced GitHub user, so please tell me how I can optimize my code, fix errors, and make it more user-friendly. Thank you!
