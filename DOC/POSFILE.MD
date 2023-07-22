@@ -7,6 +7,7 @@ Ice Moon is composed of maps in the .POS file format.
 
 It uses the following format in pseudocode:
 
+```
 uint32 header; // "POS0"
 uint16 vert_count, uv_count, tri_count, node_count, leaf_count, texture_count, entity_count;
 
@@ -47,3 +48,4 @@ entity
 	float x, y, z, x_rotation, y_rotation;
 	float misc[8]; // 8 custom float variables for every entity
 }
+```
