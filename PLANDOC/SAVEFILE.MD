@@ -8,6 +8,7 @@ Ice Moon uses the .SGF extension to load saved games. By default, they are in th
 
 It uses the following format in pseudocode:
 
+```
 uint32 header; // "SGF0"
 uint8 mod_count;
 uint8 sfx_count;
@@ -37,3 +38,4 @@ entity
 	float mainAnimTime, facialAnimTime;
 	uint8 mainAnimation, facialAnimation;
 }
+```
