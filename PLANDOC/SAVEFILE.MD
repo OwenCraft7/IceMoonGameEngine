@@ -1,4 +1,7 @@
 # Ice Moon Save File Documentation
+
+**This is a planned document! Everything below here is not part of the actual game engine yet.**
+
 Ice Moon uses the .SGF extension to load saved games. By default, they are in the game's main directory, but its destination path can be set by the user.
 
   ------

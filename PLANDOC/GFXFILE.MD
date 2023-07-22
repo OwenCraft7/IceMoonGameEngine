@@ -1,5 +1,7 @@
 # Ice Moon Graphics File Documentation, by SampleImage
 
+**This is a planned document! Everything below here is not part of the actual game engine yet.**
+
 Ice Moon uses the .IGF extension to load graphics of any kind, such as images, texture, text, and GUI.
 
 The file starts with a 4 byte "IGF0" string. // "IGF0" Graphics File Version 0
