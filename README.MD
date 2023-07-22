@@ -7,11 +7,11 @@ If you want to try this engine yourself, follow this setup. This setup assumes y
 
 You must have the following specifications to run this engine:
 
--	CPU:	Intel Pentium 85 MHz or above
+-	CPU:	Intel Pentium or above (85 MHz+ recommended)
 -	RAM:	8 MB or above
 -	GPU:	VGA or better
 -	OS:		MS-DOS 5.0 or above
--	Storage (Updated as of 7/16th/2023): At least 26.1 MB
+-	Storage: At least 11.3 MB (Updated as of July 22 2023)
 
 First, rename the extracted IceMoonGameEngine-main folder to ICESRC, then place it in your mounted DOSBox C: drive.
 
@@ -22,17 +22,16 @@ https://github.com/open-watcom/open-watcom-v2/releases
 
 Find the current build and click the Assets drop-down arrow, then click on the file that ends in "-c-dos.exe".
 
-If the above link doesn't work, download it from here instead:
+If the above link is down, download it from here instead:
 https://web.archive.org/web/20230716115926/https://github.com/open-watcom/open-watcom-v2/releases
 
 Place the Watcom installer inside the DOSBox C: drive, then run DOSBox and set the installation directory to "C:\WATCOM".
 
 I recommend performing a selective installation to save as much storage space as possible. It's required if you're gonna test this engine on real hardware.
--	Disable everything in the 16-Bit tab.
+
+-	Disable everything in the 16-Bit, Other, and Help Files tabs.
 -	Enable everything in the 32-Bit tab.
 -	Enable only DOS in the Target and Host tabs.
--	Disable everything in the Other tab.
--	Enable only DOS in the Help Files tab.
 
 Delete the installer once finished.
 
