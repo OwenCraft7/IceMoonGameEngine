@@ -48,8 +48,6 @@ void printtext(const char* text, int number, const int x, const int y)  // Print
     for (char_num = 0; char_num < strlen(text); char_num++) // For every char in the string,
     {
         shift_x = x + total_length;     // X screen position of top-left of char
-        if (char_num == typeXPosition_Text)  // This focuses on the chat text cursor
-            typeXPosition_Screen = shift_x;
         if (shift_x < 321 - grid_width) // If char is far enough from the right of the screen, print the char
         {
             char_width = vwf_list[(int)text[char_num]];
@@ -73,7 +71,7 @@ void printtext(const char* text, int number, const int x, const int y)  // Print
     }
 }
 
-void display_chat() // Prints all the debug and chat-related text on screen
+void displayAllText() // Prints everything text-related on screen
 {
     int i;
     for (i = 0; i < 3; i++)
@@ -88,16 +86,29 @@ void display_chat() // Prints all the debug and chat-related text on screen
     {
         printtext(type_line, FONT_CHAT, 0, 200);
         if (typeCursorVisible)
+        {
+            typeXPosition_Screen = 0;
+            for (i = 0; i < typeXPosition_Text; i++)  // This focuses on the chat text cursor
+                typeXPosition_Screen += fontnumber_vwf[FONT_CHAT].charcode[type_line[i]];
             drawimage(imgnumber[7], typeXPosition_Screen, 200);
+        }
     }
+    snprintf(HPMaxString, 4, "%03d", playerHPMax);
+    snprintf(HPCurrentString, 4, "%03d", playerHPCurrent);
+    snprintf(AmmoLoadedString, 4, "%03d", playerAmmoLoaded);
+    snprintf(AmmoUnloadedString, 4, "%03d", playerAmmoUnloaded);
+    printtext(HPCurrentString, FONT_GUI, 32, 208);
+    printtext(HPMaxString, FONT_GUI, 32, 224);
+    printtext(AmmoLoadedString, FONT_GUI, 252, 208);
+    printtext(AmmoUnloadedString, FONT_GUI, 252, 224);
 }
 
 void scrollChatUp()
 {
     int i;
-    for (i = 0; i < 18; i++)
+    for (i = 1; i < 20; i++)
     {
-        strcpy(chat_line[i], chat_line[i + 1]);
+        strcpy(chat_line[i - 1], chat_line[i]);
         chat_timer[i] = chat_timer[i + 1];
     }
 }

@@ -72,18 +72,20 @@ static void textMode()
     asmVideoCode(0x03);
 }
 
-void palette()
+void palette(const int r_multi, const int g_multi, const int b_multi)
 {
     int r, g;
+    int r_limit = r_multi << 3;
+    int g_limit = g_multi << 3;
 
     outp(0x03c8, 0);
-    for (r = 0; r < 64; r += 9)
-        for (g = 0; g < 64; g += 9)
+    for (r = 0; r < r_limit; r += r_multi)
+        for (g = 0; g < g_limit; g += g_multi)
         {
             outp(0x03c9, r); outp(0x03c9, g); outp(0x03c9, 0);
-            outp(0x03c9, r); outp(0x03c9, g); outp(0x03c9, 21);
-            outp(0x03c9, r); outp(0x03c9, g); outp(0x03c9, 42);
-            outp(0x03c9, r); outp(0x03c9, g); outp(0x03c9, 63);
+            outp(0x03c9, r); outp(0x03c9, g); outp(0x03c9, b_multi);
+            outp(0x03c9, r); outp(0x03c9, g); outp(0x03c9, b_multi << 1);
+            outp(0x03c9, r); outp(0x03c9, g); outp(0x03c9, b_multi * 3);
         }
 }
 
@@ -204,24 +206,24 @@ void replaceimage(const char* file, image* pointer) // Replaces images that are 
     loadimage(file, pointer);  // Replace the deleted image with the current one.
 }
 
-void drawimage(const image img, const int x, const int y)   // Draws an image into the color buffer. It's recommended to do this AFTER the 3D rendering.
+void drawimage(const image img, const int x, const int y)   // Draws an image into the color buffer. Do this AFTER the 3D rendering.
 {
     int i, j;
     int img_pos = 0, difference = 0;
-    int left_w, offset_w, offset_h;
-
-    offset_w = img.width + x; offset_h = img.height + y;  // Offset Width = Left side image, Offset Height = Bottom side image
+    int leftSide, rightSide, bottomSide;
+    // leftSide: Left side image, rightSide: Right side image, bottomSide: Bottom side image
+    rightSide = img.width + x; bottomSide = img.height + y;
     // Restrict offsets inside the screen
-    if (offset_w > 320) {difference = offset_w - 320; offset_w = 320;}
-    if (offset_h > 240) offset_h = 240;
-    if (x < 0) { left_w = 0; difference -= x; img_pos -= x; }
-    else left_w = x;
+    if (rightSide > 320) {difference = rightSide - 320; rightSide = 320;}
+    if (bottomSide > 240) bottomSide = 240;
+    if (x < 0) {leftSide = 0; difference -= x; img_pos -= x;}
+    else leftSide = x;
 
     img_pos += -(y < 0) & (img.width * -y);  // Skip part of the image if it's somewhat above screen
 
-    for (i = -(y > -1) & y; i < offset_h; i++)  // Ensure the image isn't drawn above screen
+    for (i = -(y > -1) & y; i < bottomSide; i++)  // Ensure the image isn't drawn above or below the screen
     {
-        for (j = left_w; j < offset_w; j++)
+        for (j = leftSide; j < rightSide; j++)
         {
             if (img.pixel[img_pos].c != img.transparent)
                 pixel(j, i, img.pixel[img_pos].c);

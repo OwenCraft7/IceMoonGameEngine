@@ -59,10 +59,11 @@ void kbd_finish()   // restore the original keyboard irq handler - required if k
 // returns an integer array with each entry representing a keypress, mapped to KeyCode enum
 const uint16_t *kbd_updateInput()   
 {
+    uint8_t key;
     // get last key and flush keyboard buffer
     _asm {
         in al, 60h
-        mov keyDown, al
+        mov key, al
         in al, 61h
         mov ah, al
         or al, 80h
@@ -76,23 +77,17 @@ const uint16_t *kbd_updateInput()
         int 21h
     }
 
-    if(keyDown < 0x80)
-        keysDown[keyDown] = 1;
-    else
+    if (key < 0x80)
     {
-        keyDown -= 0x80;
-        keysDown[keyDown]    = 0;
-        keysPressed[keyDown] = 0;
-    }
-    if (lastKeyDown != keyDown)
-    {
-        if (keyDown != '\0') aKeyPressed = true;
-        lastKeyDown = keyDown;
+        keysDown[key] = 1;
+        keyDown = key;
     }
     else
     {
-        aKeyPressed = false;
-        keyDown = 0; lastKeyDown = 0;
+        key -= 0x80;
+        keysDown[key] = 0;
+        keysPressed[key] = 0;
+        keyDown = 0;
     }
 
     return &keysDown[0];
@@ -121,43 +116,65 @@ static void kbd_flush() // clear pressed key states - not needed if using custom
 
 void detectKeysChat()
 {
-    typeXPosition_Text += kbd_keyPressed(RIGHT) - kbd_keyPressed(LEFT);
-    if (typeXPosition_Text < 0)
-        typeXPosition_Text = 0;
-    else if (typeXPosition_Text > typeLineLength)
-        typeXPosition_Text = typeLineLength;
-    else if (typeXPosition_Text > CHAT_LINE_LENGTH)
-        typeXPosition_Text = CHAT_LINE_LENGTH;
-    if (aKeyPressed)
+    char keyCodePressed = kbd_keyPressed(keyDown);
+    char characterToType = keycodeToChar[keyDown + shiftKeyDown * 81];
+
+    if (keyCodePressed)
     {
-        typeXPosition_Text++;
-        if (typeXPosition_Text <= CHAT_LINE_LENGTH)
+        if (characterToType != '\0')
         {
-            typeLineLength++;
-            if (typeLineLength <= CHAT_LINE_LENGTH)
+            typeXPosition_Text++;
+            if (typeXPosition_Text <= CHAT_LINE_LENGTH)
             {
-                memcpy(type_line + typeXPosition_Text, type_line + typeXPosition_Text - 1, typeLineLength - (typeXPosition_Text - 1));
-                type_line[typeXPosition_Text - 1] = keycodeToChar[keyDown + shiftKeyDown * 58];
+                typeLineLength++;
+                if (typeLineLength <= CHAT_LINE_LENGTH)
+                {
+                    memmove(type_line + typeXPosition_Text, type_line + typeXPosition_Text - 1, typeLineLength - typeXPosition_Text);
+                    type_line[typeXPosition_Text - 1] = characterToType;
+                }
+                else
+                {
+                    typeXPosition_Text--;
+                    typeLineLength = CHAT_LINE_LENGTH;
+                }
+            }
+            else
+                typeXPosition_Text = CHAT_LINE_LENGTH;
+        }
+        else
+        {
+            if (keyDown == BACKSPACE)
+            {
+                typeXPosition_Text--;
+                if (typeXPosition_Text >= playerNameLengthPlusTwo)
+                {
+                    memmove(type_line + typeXPosition_Text, type_line + typeXPosition_Text + 1, typeLineLength - typeXPosition_Text);
+                    typeLineLength--;
+                }
+                else
+                    typeXPosition_Text = playerNameLengthPlusTwo;
+            }
+            else if (keyDown == ESC)   // If escape pressed,
+                chat_mode = false;  // Hide chat
+            else if (keyDown == ENTER) // Send a message with the enter key
+            {
+                scrollChatUp();
+                snprintf(chat_line[19], CHAT_LINE_WITHNULL, "%s", type_line);
+                chat_timer[19] = 6.0f;
+                chat_mode = false;
             }
             else
             {
-                typeXPosition_Text--;
-                typeLineLength = CHAT_LINE_LENGTH;
+                typeXPosition_Text += (keyDown == RIGHT) - (keyDown == LEFT);
+
+                if (typeXPosition_Text < playerNameLengthPlusTwo)
+                    typeXPosition_Text = playerNameLengthPlusTwo;
+                else if (typeXPosition_Text > typeLineLength)
+                    typeXPosition_Text = typeLineLength;
+                else if (typeXPosition_Text > CHAT_LINE_LENGTH)
+                    typeXPosition_Text = CHAT_LINE_LENGTH;
             }
         }
-        else
-            typeXPosition_Text = CHAT_LINE_LENGTH;
-    }
-    if (kbd_keyPressed(BACKSPACE))
-    {
-        typeXPosition_Text--;
-        if (typeXPosition_Text >= 0)
-        {
-            memcpy(type_line + typeXPosition_Text, type_line + typeXPosition_Text + 1, typeLineLength - typeXPosition_Text);
-            typeLineLength--;
-        }
-        else
-            typeXPosition_Text = 0;
     }
 }
 
@@ -250,27 +267,18 @@ void inputKeyboard()
                     load_pos("MAPS/TEST3.POS");
             }
         }
-        /*if (kbd_keyPressed(T))  // If T pressed,
+        if (kbd_keyPressed(T))  // If T pressed,
         {
             chat_mode = true; // Show chat
             memset(type_line, 0x00, CHAT_LINE_WITHNULL);  // Clear text the user will type.
-            typeXPosition_Text = 0;
-            typeLineLength = 0;
-        }*/
+            snprintf(type_line, CHAT_LINE_LENGTH, "%s: ", player_name);
+            typeXPosition_Text = typeLineLength = playerNameLengthPlusTwo;
+        }
     }
     else   // If chat is open,
     {
         axis_keyDown[0] = axis_keyDown[1] = axis_keyDown[2] = 0.0f; // Make sure the player can't move or look.
         detectKeysChat();
-        if (kbd_keyPressed(ESC))  // If escape pressed,
-            chat_mode = false; // Hide chat
-        if (kbd_keyPressed(ENTER))  // Send a message with the enter key
-        {
-            scrollChatUp();
-            snprintf(chat_line[19], CHAT_LINE_LENGTH, "%s: %s", player_name, type_line);
-            chat_timer[19] = 6.0f;
-            chat_mode = false;
-        }
     }
 
     //  Limit player X rotation between -180 and 180 degrees, and make it wrap around.

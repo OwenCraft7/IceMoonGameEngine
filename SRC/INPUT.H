@@ -3,8 +3,8 @@
 
 //  Simple key input processing.
 
-bool aKeyPressed, shiftKeyDown;
-uint8_t keyDown = 0, lastKeyDown = 0;
+bool shiftKeyDown;
+uint8_t keyDown;
 const uint16_t *kbd_updateInput();
 
 static inline int kbd_keyDown(enum kbd_KeyCode key);

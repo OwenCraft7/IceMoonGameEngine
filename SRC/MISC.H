@@ -7,10 +7,10 @@
 
 union REGS in, out;
 
-const double PI = 3.1415926535897932384626433832795;
-const double HALF_PI = 1.5707963267948966192313216916398;
-const double PI180 = 0.01745329251994329576923690768489;		// Pi DIVIDED BY 180, not multiplied!
-const double INVS_PI180 = 57.295779513082320876798154814105;	// 1 / (Pi / 180)
+const double PI =           3.1415926535897932384626433832795;
+const double HALF_PI =      1.5707963267948966192313216916398;
+const double PI180 =        0.01745329251994329576923690768489; // Pi DIVIDED BY 180, not multiplied!
+const double INVS_PI180 =   57.295779513082320876798154814105;  // 1 / (Pi / 180)
 
 enum kbd_KeyCode
 {
@@ -37,7 +37,7 @@ enum kbd_KeyCode
     DEL = 83
 };
 
-char keycodeToChar[116] =
+char keycodeToChar[162] =
 {
     '\0', '\0', '1', '2', '3',
     '4', '5', '6', '7',
@@ -53,7 +53,12 @@ char keycodeToChar[116] =
     'x', 'c', 'v', 'b',
     'n', 'm', ',', '.',
     '/', '\0', '\0', '\0',
-    ' ',
+    ' ', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
     '\0', '\0', '!', '@', '#',
     '$', '%', '^', '&',
     '*', '(', ')', '_',
@@ -68,7 +73,12 @@ char keycodeToChar[116] =
     'X', 'C', 'V', 'B',
     'N', 'M', '<', '>',
     '?', '\0', '\0', '\0',
-    ' '
+    ' ', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
+    '\0', '\0', '\0', '\0',
 };
 
 typedef struct
@@ -87,7 +97,14 @@ float camRotX, camRotY, camPosY, headPosY;
 // Miscellaneous Properties
 bool endGameLoop, noclip, paused, chat_mode, mapCycled, typeCursorVisible;
 int mapNumber, errormessage;
+
+int playerHPCurrent = 100, playerAmmoLoaded = 24;
+int playerHPMax = 150, playerAmmoUnloaded = 100;
+char HPCurrentString[4], AmmoUnloadedString[4];
+char HPMaxString[4], AmmoLoadedString[4];
+
 char mod_folder[9], player_name[21];
+int playerNameLengthPlusTwo;
 
 static inline void swapfloat(float*, float*);
 static inline void swapthreefloats(float*, float*, float*);

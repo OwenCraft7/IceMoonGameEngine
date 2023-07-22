@@ -58,11 +58,12 @@ int main(int argc, char **argv[])
 
     load_pos("MAPS/TEST.POS");    // Load the main map
 
-    font_count = 2;
+    font_count = 3;
     fontnumber = calloc(font_count, sizeof(image));   // Allocate memory for fonts to be loaded
     fontnumber_vwf = calloc(font_count, sizeof(vwf_settings));
     loadfont("CHAT_0", FONT_CHAT);
     loadfont("DEBUG_0", FONT_DEBUG);
+    loadfont("GUI_0", FONT_GUI);
 
     img_count = 8;
     imgnumber = calloc(img_count, sizeof(image));   // Allocate memory for images to be loaded
@@ -86,9 +87,8 @@ int main(int argc, char **argv[])
              Green would have the RG channel's size multiplied by 4, and repeated on a 32x32 pixel grid.
              Red would have the RG channel's size multiplied by 32, and encompass the entire colormap. */
 
-    videoMode();    // Switch to VGA Mode X
-    // It has a resolution of 320x240 pixels and supports 256 simultaneous colors.
-    palette();  // Initialize color palette in the 8-8-4 RGB format, adding up to 256 colors.
+    videoMode();        // Switch to VGA Mode X
+    palette(9, 9, 21);  // Initialize color palette in the 8-8-4 RGB format, adding up to 256 colors.
 
     kbd_start();    // Initialize keyboard input
     
@@ -127,17 +127,17 @@ int main(int argc, char **argv[])
         drawimage(imgnumber[5], 288, 208);  // Ammo
         drawimage(imgnumber[3], 156, 116);  // Crosshair
 
-        snprintf(debug_line[0], CHAT_LINE_LENGTH, "FPS: %d, Noclip: %d, Map: %d", framesPerSecond, noclip, mapNumber);// , aKeyPressed);
-        //snprintf(debug_line[1], CHAT_LINE_LENGTH, "Leaf: %d, Crosshair Distance: %.2fm", playerLeaf, dist_buffer[120][160]);
-        //snprintf(debug_line[2], CHAT_LINE_LENGTH, "LP: %d, RP: %d, LD: %d, RD: %d", mouseLeftPressed, mouseRightPressed, mouseLeftDown, mouseRightDown);
-        snprintf(debug_line[1], CHAT_LINE_LENGTH, "Coordinates: %.2f, %.2f, %.2f", playerPos.x, playerPos.y, playerPos.z);
-        //snprintf(debug_line[2], CHAT_LINE_LENGTH, "Collide X: %.2f, Y: %.2f, Z: %.2f", playerCollideIntersect.x, playerCollideIntersect.y, playerCollideIntersect.z);
+        snprintf(debug_line[0], CHAT_LINE_WITHNULL, "FPS: %d, Noclip: %d, Map: %d", framesPerSecond, noclip, mapNumber);// , aKeyPressed);
+        //snprintf(debug_line[1], CHAT_LINE_WITHNULL, "Leaf: %d, Crosshair Distance: %.2fm", playerLeaf, dist_buffer[120][160]);
+        //snprintf(debug_line[2], CHAT_LINE_WITHNULL, "LP: %d, RP: %d, LD: %d, RD: %d", mouseLeftPressed, mouseRightPressed, mouseLeftDown, mouseRightDown);
+        snprintf(debug_line[1], CHAT_LINE_WITHNULL, "Coordinates: %.2f, %.2f, %.2f", playerPos.x, playerPos.y, playerPos.z);
+        //snprintf(debug_line[2], CHAT_LINE_WITHNULL, "Collide X: %.2f, Y: %.2f, Z: %.2f", playerCollideIntersect.x, playerCollideIntersect.y, playerCollideIntersect.z);
         if (!sb_detected)
-            snprintf(debug_line[2], CHAT_LINE_LENGTH, "SoundBlaster is not connected.");
+            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "SoundBlaster is not connected.");
         else
-            snprintf(debug_line[2], CHAT_LINE_LENGTH, "SoundBlaster is found at A%x I%u D%u.", sb_base, sb_irq, sb_dma);
+            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "SoundBlaster is found at A%x I%u D%u.", sb_base, sb_irq, sb_dma);
 
-        display_chat(); // Displays debug text too
+        displayAllText();
 
         if (mouseDetect == false)
             drawimage(imgnumber[6], mouseX, mouseY);

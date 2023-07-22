@@ -46,8 +46,8 @@ static void fgets_noNewline(char* buffer, int maxCount, FILE* stream)
 
 float invsqrt(float var)
 {
-    long i; float f = var;
-    i = *(long*)&f;
+    float f = var;
+    long i = *(long*)&f;
     i = 0x5f1ffff9 - (i >> 1);
     f = *(float*)&i;
     return 0.703952253f * f * (2.38924456f - var * f * f);
@@ -73,6 +73,7 @@ void loadCfg()
     {
         fgets_noNewline(mod_folder, 9, tempcfg);
         fgets(player_name, 21, tempcfg);
+        playerNameLengthPlusTwo = strlen(player_name) + 2;
     }
     else
     {
