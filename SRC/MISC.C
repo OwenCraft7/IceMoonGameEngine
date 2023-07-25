@@ -53,6 +53,14 @@ float invsqrt(float var)
     return 0.703952253f * f * (2.38924456f - var * f * f);
 }
 
+float distance(vert a, vert b)
+{
+    float dx = a.x - b.x;
+    float dy = a.y - b.y;
+    float dz = a.z - b.z;
+    return sqrt(dx * dx + dy * dy + dz * dz);
+}
+
 static float dot(vert a, vert b)
 {
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
@@ -63,6 +71,14 @@ static void cross(float ax, float ay, float az, float bx, float by, float bz, ve
     c->x = ay * bz - az * by;
     c->y = az * bx - ax * bz;
     c->z = ax * by - ay * bx;
+}
+
+void normalize(vert* Vector)
+{
+    float inverseLength = invsqrt(Vector->x * Vector->x + Vector->y * Vector->y + Vector->z * Vector->z);
+    Vector->x *= inverseLength;
+    Vector->y *= inverseLength;
+    Vector->z *= inverseLength;
 }
 
 void loadCfg()

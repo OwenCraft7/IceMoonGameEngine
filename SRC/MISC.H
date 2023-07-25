@@ -95,8 +95,8 @@ vert dummyTri[3] = { 0, 0, 2,
 float camRotX, camRotY, camPosY, headPosY;
 
 // Miscellaneous Properties
-bool endGameLoop, noclip, paused, chat_mode, mapCycled, typeCursorVisible;
-int mapNumber, errormessage;
+bool endGameLoop, noclip, paused, chat_mode, typeCursorVisible;
+int mapNumber = 1, mapNumSwitch, errormessage, playerLeaf;
 
 int playerHPCurrent = 100, playerAmmoLoaded = 24;
 int playerHPMax = 150, playerAmmoUnloaded = 100;

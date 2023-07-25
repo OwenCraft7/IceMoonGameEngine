@@ -236,36 +236,34 @@ void inputKeyboard()
         axis_keyDown[1] = (kbd_keyDown(D) - kbd_keyDown(A)) * maxSpeed;            //  Left or right
         axis_keyDown[2] = (kbd_keyDown(SPACE) - kbd_keyDown(L_SHIFT)) * maxSpeed;  //  Up or down
 
-        if (kbd_keyPressed(R)) // Cycle map left
+        mapNumSwitch = kbd_keyPressed(F) - kbd_keyPressed(R);
+        if (kbd_keyPressed(G) || mapNumSwitch != 0)
         {
-            mapNumber--;
-            if (mapNumber < 0)
-                mapNumber = 2;
-            mapCycled = true;
-        }
-        if (kbd_keyPressed(F)) // Cycle map right
-        {
-            mapNumber++;
-            if (mapNumber > 2)
-                mapNumber = 0;
-            mapCycled = true;
-            
-        }
-        if (mapCycled)
-        {
-            mapCycled = false;
-            playerMovement = true;
+            if (mapNumSwitch != 0)
+            {
+                mapNumber += mapNumSwitch;
+                if (mapNumber < 0)
+                    mapNumber = 2;
+                else if (mapNumber > 2)
+                    mapNumber = 0;
+            }
+
             switch (mapNumber)
             {
-                case 0:
-                    load_pos("MAPS/TEST.POS");
-                    break;
-                case 1:
-                    load_pos("MAPS/TEST2.POS");
-                    break;
-                case 2:
-                    load_pos("MAPS/TEST3.POS");
+            case 0:
+                load_pos("MAPS/TEST.POS");
+                break;
+            case 1:
+                load_pos("MAPS/TEST2.POS");
+                break;
+            case 2:
+                load_pos("MAPS/TEST3.POS");
             }
+
+            playerPos.x = 1.0f; playerPos.y = 0.0f; playerPos.z = 0.0f;
+            velocity.x = 0.0f; velocity.y = 0.0f; velocity.z = 0.0f;
+            camRotX = 0.0f; camRotY = 0.0f;
+            playerMovement = true;
         }
         if (kbd_keyPressed(T))  // If T pressed,
         {

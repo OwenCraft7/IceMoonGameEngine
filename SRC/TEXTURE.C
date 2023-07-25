@@ -7,19 +7,19 @@
 
 #include "TEXTURE.H"
 
-void load_temptexture(int j)    // Texture MUST be a power of two. Otherwise, the image will be screwed up.
+void load_temptexture(image sourceImage)    // Texture MUST be a power of two. Otherwise, the image will be screwed up.
 {
     if (!endGameLoop)
     {
-        if ((tempimgdata = map_texture[j].pixel) != NULL)
+        if ((tempimgdata = sourceImage.pixel) != NULL)
         {
-            tempimgTransparent = map_texture[j].transparent;
-            bit_imgwidth = roundpowtwo(map_texture[j].width);
-            bit_imgsize = bit_imgwidth * roundpowtwo(map_texture[j].height);
+            tempimgTransparent = sourceImage.transparent;
+            bit_imgwidth = roundpowtwo(sourceImage.width);
+            bit_imgsize = bit_imgwidth * roundpowtwo(sourceImage.height);
             f_width = bit_imgwidth;  f_size = bit_imgsize;
             bit_imgsize -= bit_imgwidth;
             bit_imgwidth -= 1;
-            if (tempimgTransparent != 255)
+            if (tempimgTransparent == -1)
                 alpha_toggle = 0.0f;
             else
                 alpha_toggle = 999.0f;
@@ -57,12 +57,12 @@ void texture_hline(const int y, int x1, int x2, float z1, float z2, float u1, fl
         while (x1 <= x2)
         {
             i = 1.0f / z1;
-            if (dist_pointer[x1] > 195.2f)
+            if (dist_pointer[x1] >= i || skipDistBuffer)
             {
-                color = multiplyColor(tempimgdata[((int)(u1 * i) & bit_imgwidth) + ((int)(v1 * i) & bit_imgsize)].c, luminance);
+                color = tempimgdata[((int)(u1 * i) & bit_imgwidth) + ((int)(v1 * i) & bit_imgsize)].c;
                 if (color != tempimgTransparent)
                 {
-                    level_pointer[x1] = color;  // Draw pixel in the level buffer
+                    level_pointer[x1] = multiplyColor(color, luminance);  // Draw pixel in the level buffer
                     dist_pointer[x1] = i;       // Set distance in a specific pixel in the distance buffer
                 }
             }
@@ -159,12 +159,11 @@ void texture_twodimtri(int x0, int x1, int x2, int y0, int y1, int y2, float z0,
     }
 }
 
-void texture_tri(const tri triarr)  // This function takes a 3D triangle and converts the vertices to 2D points on the screen
+void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sourceImageArray, bool ignoreDistanceBuffer)  // This function takes a 3D triangle and converts the vertices to 2D points on the screen
 {
     int i, j, k, cx[4], cy[4];
     float pu[3], pv[3], cz[4], cu[4], cv[4];
-    float slope, intercept, inverse;
-    float normalize, n_vector;
+    float slope, intercept, inverse, n_vector;
     vert normal, p[3], diff;
 
     // Precalculate sine and cosine of player rotation.
@@ -175,19 +174,21 @@ void texture_tri(const tri triarr)  // This function takes a 3D triangle and con
     
     int behindZ = 0; // "behindZ" tells us the number of vertices behind the near clipping plane.
 
+    skipDistBuffer = ignoreDistanceBuffer;
+
     for (i = 0; i < 3; i++) // For the three vertices:
     {
         // Get UV coordinates and multiply them with texture width and size respectively.
         // (V is multiplied with size to avoid calculating Width * Height = Size.)
-        j = triarr.uv[i];
-        pu[i] = map_uv[j].u * f_width;
-        pv[i] = map_uv[j].v * f_size;
+        j = triangle.uv[i];
+        pu[i] = sourceUV[j].u * f_width;
+        pv[i] = sourceUV[j].v * f_size;
         
         // Subtract the vertex's position by the camera's position so that the camera is at the origin point.
-        j = triarr.v[i];
-        diff.x = map_vert[j].x - playerPos.x;
-        diff.y = map_vert[j].y - camPosY;
-        diff.z = map_vert[j].z - playerPos.z;
+        j = triangle.v[i];
+        diff.x = sourceVert[j].x - playerPos.x;
+        diff.y = sourceVert[j].y - camPosY;
+        diff.z = sourceVert[j].z - playerPos.z;
 
         // Rotate the camera's yaw to 0. Rotate the vertex along with the camera.
         p[i].x = (cos_camx * diff.x) + (sin_camx * diff.z);
@@ -205,14 +206,12 @@ void texture_tri(const tri triarr)  // This function takes a 3D triangle and con
     {
         // Calculate surface normals
         cross(p[2].x - p[0].x, p[2].y - p[0].y, p[2].z - p[0].z, p[1].x - p[0].x, p[1].y - p[0].y, p[1].z - p[0].z, &normal);
-
-        normalize = invsqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-        normal.x *= normalize; normal.y *= normalize; normal.z *= normalize;
+        normalize(&normal);
 
         n_vector = dot(normal, p[0]);
 
         // Load triangle's texture
-        load_temptexture(triarr.texture);
+        load_temptexture(sourceImageArray[triangle.texture]);
 
         // If the surface normal is facing towards the camera:
         if (n_vector < alpha_toggle)
@@ -239,24 +238,24 @@ void texture_tri(const tri triarr)  // This function takes a 3D triangle and con
                 }
             else if (behindZ == 1)
             {
-                k = 0; j = 0;
+                j = k = 0;
                 for (i = 0; i < 3; i++) // For each vertex:
                 {
                     if (p[i].z >= NEAR_CLIP)
                     {
                         inverse = 1.0f / p[i].z;
-                        cz[k] = inverse;
-                        cu[k] = pu[i] * inverse;
-                        cv[k] = pv[i] * inverse;
+                        cz[j] = inverse;
+                        cu[j] = pu[i] * inverse;
+                        cv[j] = pv[i] * inverse;
                         inverse *= 160.0f;
-                        cx[k] = p[i].x * inverse + 160;  // Set X on screen
-                        cy[k] = p[i].y * -inverse + 120;  // Set Y on screen
-                        k += 1;
+                        cx[j] = p[i].x * inverse + 160;  // Set X on screen
+                        cy[j] = p[i].y * -inverse + 120;  // Set Y on screen
+                        j += 1;
                     }
                     else
-                        j = i;
+                        k = i;
                 }
-                if (j == 0)
+                if (k == 0)
                 {
                     swapthreefloats(&p[0].x, &p[1].x, &p[2].x);
                     swapthreefloats(&p[0].y, &p[1].y, &p[2].y);
@@ -264,7 +263,7 @@ void texture_tri(const tri triarr)  // This function takes a 3D triangle and con
                     swapthreefloats(&pu[0], &pu[1], &pu[2]);
                     swapthreefloats(&pv[0], &pv[1], &pv[2]);
                 }
-                else if (j == 1)
+                else if (k == 1)
                 {
                     swapfloat(&p[1].x, &p[2].x);
                     swapfloat(&p[1].y, &p[2].y);
@@ -275,38 +274,38 @@ void texture_tri(const tri triarr)  // This function takes a 3D triangle and con
 
                 for (i = 2; i < 4; i++)
                 {
-                    k = 3 - i;
+                    j = 3 - i;
 
                     // Calculate Z difference inverse to avoid more than one division
-                    inverse = 1.0f / (p[2].z - p[k].z);
+                    inverse = 1.0f / (p[2].z - p[j].z);
 
                     // Calculate X position on screen
-                    slope = (p[2].x - p[k].x) * inverse;
+                    slope = (p[2].x - p[j].x) * inverse;
                     intercept = p[2].x - slope * p[2].z;
                     cx[i] = slope + intercept * 16000.0f;
                     cx[i] += 160;
 
                     // Calculate Y position on screen
-                    slope = (p[2].y - p[k].y) * inverse;
+                    slope = (p[2].y - p[j].y) * inverse;
                     intercept = p[2].y - slope * p[2].z;
                     cy[i] = slope + intercept * -16000.0f;
                     cy[i] += 120;
 
                     // Calculate U texture coordinate
-                    slope = (pu[2] - pu[k]) * inverse;
+                    slope = (pu[2] - pu[j]) * inverse;
                     intercept = pu[2] - slope * p[2].z;
                     cu[i] = slope + intercept * INVS_NEAR_CLIP;
 
                     // Calculate V texture coordinate
-                    slope = (pv[2] - pv[k]) * inverse;
+                    slope = (pv[2] - pv[j]) * inverse;
                     intercept = pv[2] - slope * p[2].z;
                     cv[i] = slope + intercept * INVS_NEAR_CLIP;
 
                     cz[i] = INVS_NEAR_CLIP;
 
-                    k = i - 1;
+                    j = i - 1;
 
-                    texture_twodimtri(cx[0], cx[k], cx[i], cy[0], cy[k], cy[i], cz[0], cz[k], INVS_NEAR_CLIP, cu[0], cu[k], cu[i], cv[0], cv[k], cv[i]);
+                    texture_twodimtri(cx[0], cx[j], cx[i], cy[0], cy[j], cy[i], cz[0], cz[j], INVS_NEAR_CLIP, cu[0], cu[j], cu[i], cv[0], cv[j], cv[i]);
                 }
             }
             else // If two vertices are behind the camera.
@@ -321,36 +320,36 @@ void texture_tri(const tri triarr)  // This function takes a 3D triangle and con
                         inverse *= 160.0f;
                         cx[i] = p[i].x * inverse + 160;  // Set X on screen
                         cy[i] = p[i].y * -inverse + 120;  // Set Y on screen
-                        k = i; // k = the vertex number that's in front.
+                        j = i; // j = the vertex number that's in front.
                     }
                 for (i = 0; i < 3; i++) // For each vertex:
-                    if (i != k) // If the vertex is behind the camera,
+                    if (i != j) // If the vertex is behind the camera,
                     {
                         // Move the vertex to Z position 0, on a line between its original position and the vertex in front of the camera.
 
                         // Calculate Z difference inverse to avoid more than one division.
-                        inverse = 1.0f / (p[k].z - p[i].z);
+                        inverse = 1.0f / (p[j].z - p[i].z);
 
                         // Calculate X position on screen
-                        slope = (p[k].x - p[i].x) * inverse;
-                        intercept = p[k].x - slope * p[k].z;
+                        slope = (p[j].x - p[i].x) * inverse;
+                        intercept = p[j].x - slope * p[j].z;
                         cx[i] = slope + intercept * 16000.0f;
                         cx[i] += 160;
 
                         // Calculate Y position on screen
-                        slope = (p[k].y - p[i].y) * inverse;
-                        intercept = p[k].y - slope * p[k].z;
+                        slope = (p[j].y - p[i].y) * inverse;
+                        intercept = p[j].y - slope * p[j].z;
                         cy[i] = slope + intercept * -16000.0f;
                         cy[i] += 120;
 
                         // Calculate U texture coordinate
-                        slope = (pu[k] - pu[i]) * inverse;
-                        intercept = pu[k] - slope * p[k].z;
+                        slope = (pu[j] - pu[i]) * inverse;
+                        intercept = pu[j] - slope * p[j].z;
                         cu[i] = slope + intercept * INVS_NEAR_CLIP;
 
                         // Calculate V texture coordinate
-                        slope = (pv[k] - pv[i]) * inverse;
-                        intercept = pv[k] - slope * p[k].z;
+                        slope = (pv[j] - pv[i]) * inverse;
+                        intercept = pv[j] - slope * p[j].z;
                         cv[i] = slope + intercept * INVS_NEAR_CLIP;
 
                         cz[i] = INVS_NEAR_CLIP;

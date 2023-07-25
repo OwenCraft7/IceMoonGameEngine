@@ -33,4 +33,8 @@ int* map_leaf;
 image* map_texture;
 entity* map_entity;
 
+vert customWireframeVert[3] = {1, 0, 2,     -1, 0, -2,      3, 0, -2};
+uv customWireframeUV[3] = {0.5, 0, 0.1, 0.1,    0, 1, 0.1, 0.1,     1, 1, 0.1, 0.1};
+tri customWireframe = {8, 0, 1, 2, 0, 1, 2};
+
 #endif

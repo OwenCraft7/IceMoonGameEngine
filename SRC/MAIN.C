@@ -20,10 +20,10 @@
 #include "TIME.C"       // Calculates the delta time and FPS.
 #include "SOUND.C"      // Handles SFX and music.
 #include "GFX.C"        // Code for graphics, loading, and drawing images. Some of the code comes from Brackeen's VGA tutorial.
-#include "PHYS.C"       // Game Physics.
 #include "POSFILE.C"    // Loads maps.
-#include "MOUSE.C"      // Input from mouse.
 #include "TEXT.C"       // Prints text for chat, debug, HUD, menus, and subtitles.
+#include "PHYS.C"       // Game Physics.
+#include "MOUSE.C"      // Input from mouse.
 #include "INPUT.C"      // Input from keyboard. INPUT.C & INPUT.H are from Krzysztof Kondrak's DOS3D program.
 #include "TEXTURE.C"    // Draws triangles from the node leaves.
 #include "NODES.C"      // Involved with the BSP tree; checks node planes and draws node leaves.
@@ -56,7 +56,7 @@ int main(int argc, char **argv[])
             mouseDetect = false;
     }
 
-    load_pos("MAPS/TEST.POS");    // Load the main map
+    load_pos("MAPS/TEST2.POS");    // Load the main map
 
     font_count = 3;
     fontnumber = calloc(font_count, sizeof(image));   // Allocate memory for fonts to be loaded
@@ -65,7 +65,7 @@ int main(int argc, char **argv[])
     loadfont("DEBUG_0", FONT_DEBUG);
     loadfont("GUI_0", FONT_GUI);
 
-    img_count = 8;
+    img_count = 9;
     imgnumber = calloc(img_count, sizeof(image));   // Allocate memory for images to be loaded
     loadimage("NULL.BMP", &imgnumber[0]);
     loadimage("COLMAPS/BLEND.BMP", &imgnumber[1]);      // A colormap used to blend two pixel colors
@@ -75,6 +75,7 @@ int main(int argc, char **argv[])
     loadimage("GUI/AMMO.BMP", &imgnumber[5]);
     loadimage("GUI/CURSOR.BMP", &imgnumber[6]);
     loadimage("GUI/TYPE.BMP", &imgnumber[7]);
+    loadimage("TEXTURES/WIREFRME.BMP", &imgnumber[8]);
 
     // Shortcuts to the blend and multiply colormaps. Each colormap is both 256x256 pixels in size.
     blend_map = imgnumber[1].pixel;
@@ -117,6 +118,7 @@ int main(int argc, char **argv[])
             First checks if the camera's in front or behind node plane #0,
             then we go down further from here.  */
             checknode(map_node[0]);
+            texture_tri(customWireframe, customWireframeVert, customWireframeUV, imgnumber, true); // Draw a wireframe triangle to showcase WIP physics
         }
         // Copies level buffer to general color buffer, even if the level hasn't been regenerated.
         memcpy(col_buffer, level_buffer, 76800);
@@ -127,15 +129,9 @@ int main(int argc, char **argv[])
         drawimage(imgnumber[5], 288, 208);  // Ammo
         drawimage(imgnumber[3], 156, 116);  // Crosshair
 
-        snprintf(debug_line[0], CHAT_LINE_WITHNULL, "FPS: %d, Noclip: %d, Map: %d", framesPerSecond, noclip, mapNumber);// , aKeyPressed);
-        //snprintf(debug_line[1], CHAT_LINE_WITHNULL, "Leaf: %d, Crosshair Distance: %.2fm", playerLeaf, dist_buffer[120][160]);
-        //snprintf(debug_line[2], CHAT_LINE_WITHNULL, "LP: %d, RP: %d, LD: %d, RD: %d", mouseLeftPressed, mouseRightPressed, mouseLeftDown, mouseRightDown);
-        snprintf(debug_line[1], CHAT_LINE_WITHNULL, "Coordinates: %.2f, %.2f, %.2f", playerPos.x, playerPos.y, playerPos.z);
-        //snprintf(debug_line[2], CHAT_LINE_WITHNULL, "Collide X: %.2f, Y: %.2f, Z: %.2f", playerCollideIntersect.x, playerCollideIntersect.y, playerCollideIntersect.z);
-        if (!sb_detected)
-            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "SoundBlaster is not connected.");
-        else
-            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "SoundBlaster is found at A%x I%u D%u.", sb_base, sb_irq, sb_dma);
+        snprintf(debug_line[0], CHAT_LINE_WITHNULL, "FPS: %d, X: %.2f, Y: %.2f, Z: %.2f", framesPerSecond, playerPos.x, playerPos.y, playerPos.z);
+        snprintf(debug_line[1], CHAT_LINE_WITHNULL, "The pink wireframe triangle has physics.");
+        snprintf(debug_line[2], CHAT_LINE_WITHNULL, "WARNING, it may be buggy!");
 
         displayAllText();
 
@@ -183,16 +179,19 @@ int main(int argc, char **argv[])
             printf("Thanks for playing Ice Moon.");
             break;
         case 1:
-            printf("ERROR: Unable to allocate image data");
+            printf("ERROR: Unable to allocate image data.");
             break;
         case 2:
-            printf("ERROR: Failed to load configuration file");
+            printf("ERROR: Failed to load configuration file.");
             break;
         case 3:
-            printf("ERROR: Unable to allocate map data");
+            printf("ERROR: Unable to allocate map data.");
             break;
         case 4:
-            printf("ERROR: Incorrect map header");
+            printf("ERROR: Incorrect map header or wrong map file format.");
+            break;
+        case 5:
+            printf("ERROR: Couldn't generate log file; the disk space the game is in could be read-only. Estimated RAM is also set to 0.");
             break;
         default:
             printf("ERROR: Unknown, check source code for any problems.");

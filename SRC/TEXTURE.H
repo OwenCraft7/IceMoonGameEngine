@@ -12,6 +12,8 @@ float f_width, f_size;
 int adx[2], ady[2], sdx[2], x[2], reversed;
 float slope[4][2], edge[4][2];
 
+bool skipDistBuffer;
+
 enum triHalves
 {
 	TRI_TOP_HALF = 0,

@@ -13,15 +13,15 @@ void drawleaf(const int select)
     if (playerLeaf == -1)
         playerLeaf = select;
     for (i = map_leaf[select]; i < end; i++)   // Keep in mind, triangles are sorted by leaf number
-        texture_tri(map_tri[i]);
+        texture_tri(map_tri[i], map_vert, map_uv, map_texture, false);
 }
 
-void checkfront(const node nod)
+static void checkfront(const node nod)
 {
     if (nod.f_leaf == 0) checknode(map_node[nod.front]);
     else drawleaf(nod.front);
 }
-void checkback(const node nod)
+static void checkback(const node nod)
 {
     if (nod.b_leaf == 0) checknode(map_node[nod.back]);
     else drawleaf(nod.back);
@@ -34,7 +34,7 @@ void checknode(const node nod)
         checkfront(nod);
         checkback(nod);
     }
-    else   // If player is behind plane
+    else   // If player is behind or inside plane
     {
         checkback(nod);
         checkfront(nod);
