@@ -59,3 +59,19 @@ Next, in DOS, go to the ICESRC directory, then type "make". The game will compil
 Feel free to share your feedback, suggestions, or changes to the engine. You can look in the DOC folder to see documentation of some of the game's assets.
 
 I also want to mention that I'm not an experienced C programmer nor experienced GitHub user, so please tell me how I can optimize my code, fix errors, and make it more user-friendly. Thank you!
+
+  ------
+
+**Controls:**
+
+-	**WASD:** Move around
+-	**Mouse or arrow keys:** Look around
+-	**Spacebar:** Jump or fly up
+-	**Shift:** Fly down
+-	**T:** Open chat
+-	**Enter:** Send chat message
+-	**R/F:** Cycle maps
+-	**G:** Reload map
+-	**V:** Toggle noclip
+-	**M:** Toggle mouse cursor on screen AND use arrow keys to look
+-	**ESC:** Close game or chat
