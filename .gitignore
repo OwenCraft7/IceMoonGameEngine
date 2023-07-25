@@ -50,3 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+/BIN/DEBUGLOG.TXT
+/BIN/MAIN.OBJ
+/DOSBOX.LNK
+/MAKE.BAT
+/PLAY.BAT
+PLANDOC/
