@@ -66,11 +66,11 @@ static float dot(vert a, vert b)
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
-static void cross(float ax, float ay, float az, float bx, float by, float bz, vert *c)
+static void cross(vert a, vert b, vert *c)
 {
-    c->x = ay * bz - az * by;
-    c->y = az * bx - ax * bz;
-    c->z = ax * by - ay * bx;
+    c->x = a.y * b.z - a.z * b.y;
+    c->y = a.z * b.x - a.x * b.z;
+    c->z = a.x * b.y - a.y * b.x;
 }
 
 void normalize(vert* Vector)

@@ -6,7 +6,48 @@
 
 #include "PHYS.H"
 
-bool sphereTriangleCollision(vert TriA, vert TriB, vert TriC, vert* SphereCenter, float SphereRadius)
+bool lineTriangleIntersection(vert TriA, vert TriB, vert TriC, vert LinePointA, vert* LinePointB)	// This function has wacky physics and needs fixing.
+{
+	vert edge1, edge2, n, ao, dao, linePosDifference;
+	float det, inverseDet, u, v, t;
+
+	edge1.x = TriB.x - TriA.x;
+	edge1.y = TriB.y - TriA.y;
+	edge1.z = TriB.z - TriA.z;
+
+	edge2.x = TriC.x - TriA.x;
+	edge2.y = TriC.y - TriA.y;
+	edge2.z = TriC.z - TriA.z;
+
+	linePosDifference.x = LinePointB->x - LinePointA.x;
+	linePosDifference.y = LinePointB->y - LinePointA.y;
+	linePosDifference.z = LinePointB->z - LinePointA.z;
+	normalize(&linePosDifference);
+
+	ao.x = LinePointA.x - TriA.x;
+	ao.y = LinePointA.y - TriA.y;
+	ao.z = LinePointA.z - TriA.z;
+
+	cross(ao, linePosDifference, &dao);
+	cross(edge1, edge2, &n);
+	det = -dot(linePosDifference, n);
+	inverseDet = 1.0f / det;
+
+	u = dot(edge2, dao) * inverseDet;
+	v = -dot(edge1, dao) * inverseDet;
+	t = dot(ao, n) * inverseDet;
+
+	if (fabs(det) >= 1e-6 && t < distance(LinePointA, *LinePointB) && u >= 0.0f && v >= 0.0f && (u + v) <= 1.0f)
+	{
+		LinePointB->x = LinePointA.x + t * linePosDifference.x;
+		LinePointB->y = LinePointA.y + t * linePosDifference.y;
+		LinePointB->z = LinePointA.z + t * linePosDifference.z;
+		return true;
+	}
+	else return false;
+}
+
+bool sphereTriangleCollision(vert TriA, vert TriB, vert TriC, vert* SphereCenter, float SphereRadius)	// This function too has inaccurate physics.
 {
 	vert edge1, edge2, v0, closest, collisionNormal;
 	float a, b, c, d, e, s, t, dist, det, inverseLength, numer, denom, tmp1, tmp2;
@@ -162,77 +203,76 @@ bool sphereTriangleCollision(vert TriA, vert TriB, vert TriC, vert* SphereCenter
 		SphereCenter->x = closest.x + collisionNormal.x * (SphereRadius + 0.01f);
 		SphereCenter->y = closest.y + collisionNormal.y * (SphereRadius + 0.01f);
 		SphereCenter->z = closest.z + collisionNormal.z * (SphereRadius + 0.01f);
-
 		return true;
 	}
-	else
-		return false;
+	else return false;
 }
 
 void playerPhysicsUpdate()
 {
-	vert currentTriA, currentTriB, currentTriC;
-	int i;
-	int lastTri = (playerLeaf + 1 != leaf_count) ? map_leaf[playerLeaf + 1] : tri_count;
-	//	Initialize previous player position
+	int i, lastTri;
+	// Initialize previous player position
 	prevPlayerPos.x = playerPos.x; prevPlayerPos.y = playerPos.y; prevPlayerPos.z = playerPos.z;
 	
-	if (!noclip)
+	if (!noclip)	// If player is not in noclip mode,
 	{
-		//  Calculate velocity for the X and Z axes,
-		velocity.x = deltaTime * ((sin(camRotX) * axis_speed[0]) + (cos(camRotX) * axis_speed[1]));
-		velocity.z = deltaTime * ((cos(camRotX) * axis_speed[0]) - (sin(camRotX) * axis_speed[1]));
-
+		// Calculate velocity for the X and Z axes,
+		playerVelocity.x = deltaTime * ((sin(camRotX) * axis_speed[0]) + (cos(camRotX) * axis_speed[1]));
+		playerVelocity.z = deltaTime * ((cos(camRotX) * axis_speed[0]) - (sin(camRotX) * axis_speed[1]));
 		if (axis_keyDown[2] > 0.0f && playerIsTouchingGround)  // If space bar is held down and player is on the ground
 		{
-			velocity.y = playerJumpVelocity;	// Update player's Y velocity to jump
-			playerIsTouchingGround = false;		// Player is in the air
+			playerVelocity.y = playerJumpVelocity;	// Update player's Y velocity to jump
 		}
-		else if (!playerIsTouchingGround)		// Else, if player is in the air
+		else if (!playerIsTouchingGround)			// Else, if player is in the air
 		{
-			velocity.y += deltaTime * g_constant;	// Increase or decrease Y velocity depending on the gravity
-			if (velocity.y < terminal_velocity)		// Also check for terminal velocity
-				velocity.y = terminal_velocity;
+			playerVelocity.y += deltaTime * g_constant;	// Increase or decrease Y velocity depending on the gravity
+			if (playerVelocity.y < terminal_velocity)	// Also check for terminal velocity
+				playerVelocity.y = terminal_velocity;
 		}
 		else
-			velocity.y = 0.0f;	// If player is touching the ground and there's no space bar pressed, set Y velocity to 0.
+			playerVelocity.y = 0.0f;	// If player is touching the ground and there's no space bar pressed, set Y velocity to 0.
 
-		playerPos.y += deltaTime * velocity.y;	// Update player's Y position
+		playerPos.y += deltaTime * playerVelocity.y;	// Update player's Y position
 
 		playerPos.y += 0.25f;
-		
-		currentTriA.x = 1.0f; currentTriA.y = 0.0f; currentTriA.z = 2.0f;
-		currentTriB.x = -1.0f; currentTriB.y = 0.0f; currentTriB.z = -2.0f;
-		currentTriC.x = 3.0f; currentTriC.y = 0.0f; currentTriC.z = -2.0f;
-		/*
-		playerIsTouchingGround = sphereTriangleCollision(currentTriA, currentTriB, currentTriC, &playerPos, 0.25f);
-		for (i = map_leaf[playerLeaf]; i < lastTri; i++)
+
+		playerIsTouchingGround = false;
+		checkRootNode(prevPlayerPos.x, prevPlayerPos.y, prevPlayerPos.z, false, &prevPlayerLeaf);
+		lastTri = (prevPlayerLeaf + 1 != leaf_count) ? map_leaf[prevPlayerLeaf + 1] : tri_count;
+		for (i = map_leaf[prevPlayerLeaf]; i < lastTri; i++)
 		{
-			currentTriA = map_vert[map_tri->v[0]];
-			currentTriB = map_vert[map_tri->v[1]];
-			currentTriC = map_vert[map_tri->v[2]];
-		*/
-			playerIsTouchingGround = sphereTriangleCollision(currentTriA, currentTriB, currentTriC, &playerPos, 0.25f);
-		//}
+			//if (lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos))
+			//	playerIsTouchingGround = true;
+			if (sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f))
+				playerIsTouchingGround = true;
+		}
+		checkRootNode(playerPos.x, playerPos.y, playerPos.z, false, &playerLeaf);
+		if (playerLeaf != prevPlayerLeaf)
+		{
+			lastTri = (playerLeaf + 1 != leaf_count) ? map_leaf[playerLeaf + 1] : tri_count;
+			for (i = map_leaf[playerLeaf]; i < lastTri; i++)
+			{
+				//if (lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos))
+				//	playerIsTouchingGround = true;
+				if (sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f))
+					playerIsTouchingGround = true;
+			}
+		}
+
 		playerPos.y -= 0.25f;
-		/*
-		playerIsTouchingGround = (playerPos.y < 0.0f);
-		if (playerIsTouchingGround)						// The player is touching the ground if it goes below Y=0.
-			playerPos.y = 0.0f;	// Send the player back up.
-		*/
 	}
-	else
+	else	// If player is in noclip mode,
 	{
-		//  Calculate velocity for all three axes,
-		velocity.x = deltaTime * ((sin(camRotX) * axis_keyDown[0]) + (cos(camRotX) * axis_keyDown[1]));
-		velocity.y = deltaTime * axis_keyDown[2];
-		velocity.z = deltaTime * ((cos(camRotX) * axis_keyDown[0]) - (sin(camRotX) * axis_keyDown[1]));
-		playerPos.y += velocity.y;
+		// Calculate player velocity for all three axes,
+		playerVelocity.x = deltaTime * ((sin(camRotX) * axis_keyDown[0]) + (cos(camRotX) * axis_keyDown[1]));
+		playerVelocity.y = deltaTime * axis_keyDown[2];
+		playerVelocity.z = deltaTime * ((cos(camRotX) * axis_keyDown[0]) - (sin(camRotX) * axis_keyDown[1]));
+		playerPos.y += playerVelocity.y;
 	}
-	playerPos.x += velocity.x; playerPos.z += velocity.z;
+	playerPos.x += playerVelocity.x; playerPos.z += playerVelocity.z;
 
 	if (prevPlayerPos.x != playerPos.x || prevPlayerPos.y != playerPos.y || prevPlayerPos.z != playerPos.z)
-		playerMovement = true;	// When true, the level screen buffer will refresh.
+		playerMovement = true;	// If true, the level screen buffer will refresh.
 
 	// The player's head is 1.7 meters high, and the eye height is always 0.2 meters below.
 	headPosY = 1.7f;

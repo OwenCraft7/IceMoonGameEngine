@@ -22,38 +22,28 @@
 #include "GFX.C"        // Code for graphics, loading, and drawing images. Some of the code comes from Brackeen's VGA tutorial.
 #include "POSFILE.C"    // Loads maps.
 #include "TEXT.C"       // Prints text for chat, debug, HUD, menus, and subtitles.
+#include "TEXTURE.C"    // Draws triangles from the node leaves.
+#include "NODES.C"      // Involved with the BSP tree; checks node planes and draws node leaves.
 #include "PHYS.C"       // Game Physics.
 #include "MOUSE.C"      // Input from mouse.
 #include "INPUT.C"      // Input from keyboard. INPUT.C & INPUT.H are from Krzysztof Kondrak's DOS3D program.
-#include "TEXTURE.C"    // Draws triangles from the node leaves.
-#include "NODES.C"      // Involved with the BSP tree; checks node planes and draws node leaves.
 #include "LOGFILE.C"    // Prints a log file after the game ends.
 
-int main(int argc, char **argv[])
+int main(int argc, char *argv[])
 {
     int i, j;           // Used with for-statements and other
 
-    // Visual and active page variables used for Mode X page flipping.
-    int visual_page = 0;
-    int active_page = 19200;
-
-    endGameLoop = false;    // If true, the game will end as soon as it possibly can.
-
-    /*======================//
-    //  Real Start of Code  //
-    //======================*/
-
     sb_detected = sb_detect();  // Detect if SoundBlaster is in computer (or DOS emulator)
-
     mouseDetect = mouseInit() == 0 ? false : true;  // Detect if there's a mouse connected. Will be set true if connected.
-
     loadCfg();  // Load the configuration file and its settings
 
     // ARGUMENTS FROM COMMAND LINE:
     for (i = 1; i < argc; i++)
     {
-        if (*argv[i] = "nm") // If "-nm" argument detected, disable mouse functions.
+        if (argv[i] == "-mouse_cursor")
             mouseDetect = false;
+        else if (argv[i] == "-noclip")
+            noclip = true;
     }
 
     load_pos("MAPS/TEST2.POS");    // Load the main map
@@ -107,67 +97,51 @@ int main(int argc, char **argv[])
         
         if (playerMovement == true)
         {
-            /* Clear Buffers: */
+            // Clear level and distance buffers
             memset(level_buffer, BACKGROUND_COLOR, 76800);
+            memset(dist_buffer, 0x43, 307200);  // Sets each pixel in distance buffer to 195.263f. (MAXIMUM VIEW DISTANCE)
 
-            // Sets each pixel in distance buffer to 195.263f. (MAXIMUM VIEW DISTANCE)
-            memset(dist_buffer, 0x43, 307200);
-
-            playerLeaf = -1;    // It's set to -1 so the game can check the node leaf the player is in.
-            /*  The start of the map rendering process.
-            First checks if the camera's in front or behind node plane #0,
-            then we go down further from here.  */
-            checknode(map_node[0]);
-            texture_tri(customWireframe, customWireframeVert, customWireframeUV, imgnumber, true); // Draw a wireframe triangle to showcase WIP physics
+            checkRootNode(playerPos.x, camPosY, playerPos.z, true, &cameraLeaf);
         }
-        // Copies level buffer to general color buffer, even if the level hasn't been regenerated.
-        memcpy(col_buffer, level_buffer, 76800);
-        playerMovement = false;
+        memcpy(col_buffer, level_buffer, 76800);    // Copies level buffer to the color buffer, even if the level hasn't been regenerated.
 
-        /*  Draw GUI  */
+        // Draw GUI
         drawimage(imgnumber[4], 0, 208);    // HP
         drawimage(imgnumber[5], 288, 208);  // Ammo
         drawimage(imgnumber[3], 156, 116);  // Crosshair
 
         snprintf(debug_line[0], CHAT_LINE_WITHNULL, "FPS: %d, X: %.2f, Y: %.2f, Z: %.2f", framesPerSecond, playerPos.x, playerPos.y, playerPos.z);
-        snprintf(debug_line[1], CHAT_LINE_WITHNULL, "The pink wireframe triangle has physics.");
-        snprintf(debug_line[2], CHAT_LINE_WITHNULL, "WARNING, it may be buggy!");
+        snprintf(debug_line[1], CHAT_LINE_WITHNULL, "Noclip: %d, Player Movement: %d, Map ID: %d", noclip, playerMovement, mapNumber);
+        if (argc == 2)
+            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "argc: %d, argv1: %s", argc, argv[1]);
+        else
+            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "WARNING, physics are buggy! Press V to toggle physics.");
 
         displayAllText();
 
-        if (mouseDetect == false)
-            drawimage(imgnumber[6], mouseX, mouseY);
-        if (kbd_keyPressed(ESC) && !chat_mode)
-            endGameLoop = true;
-
+        playerMovement = false;
+        if (mouseDetect == false) drawimage(imgnumber[6], mouseX, mouseY);
+        if (kbd_keyPressed(ESC) && !chat_mode) endGameLoop = true;
         if (!endGameLoop)
         {
-            //  It's time to write to actual VGA memory!
-            //  i = Mode X Plane
-            for (i = 0; i < 4; i++)
+            // It's time to write to VGA memory!
+            for (i = 0; i < 4; i++) // i = Mode X Plane
             {
-                // The outp() function is expensive, so it's called only four times per frame.
-                outp(SC_DATA, 1 << i);
-
-                // Draw 1/4th of the screen:
-                for (j = i; j < 76800; j += 4)
-                    VGA[nonVisible + (j >> 2)] = col_buffer[0][j]; // Set pixel from color buffer to VGA memory
+                outp(SC_DATA, 1 << i);                              // The outp() function is expensive, so it's called only four times per frame.
+                for (j = i; j < 76800; j += 4)                      // Draw 1/4th of the screen
+                    VGA[nonVisible + (j >> 2)] = col_buffer[0][j];  // Set pixel from color buffer to VGA memory
             }
-            // Flip Mode X pages
-            flip(&visual_page, &active_page);
-
+            flip(); // Flip Mode X pages
             frames++; seconds += deltaTime; // Increase frame count by one and seconds by the delta time.
         }
     }
 
     kbd_finish();   // End keyboard input
     textMode();     // Return to Text Mode
+    logfile();      // Print a text file containing game statistics
 
-    logfile();  // Print a text file with certain statistics
-
-    //  Free a bunch of RAM before we exit the game
+    // Free a bunch of RAM before we exit the game
     free_mapdata();
-    free(tempimgdata);
     free_images();
     free_fonts();
     free_textures();

@@ -246,22 +246,22 @@ void inputKeyboard()
                     mapNumber = 2;
                 else if (mapNumber > 2)
                     mapNumber = 0;
-            }
 
-            switch (mapNumber)
-            {
-            case 0:
-                load_pos("MAPS/TEST.POS");
-                break;
-            case 1:
-                load_pos("MAPS/TEST2.POS");
-                break;
-            case 2:
-                load_pos("MAPS/TEST3.POS");
+                switch (mapNumber)
+                {
+                case 0:
+                    load_pos("MAPS/TEST.POS");
+                    break;
+                case 1:
+                    load_pos("MAPS/TEST2.POS");
+                    break;
+                case 2:
+                    load_pos("MAPS/TEST3.POS");
+                }
             }
 
             playerPos.x = 1.0f; playerPos.y = 0.0f; playerPos.z = 0.0f;
-            velocity.x = 0.0f; velocity.y = 0.0f; velocity.z = 0.0f;
+            playerVelocity.x = 0.0f; playerVelocity.y = 0.0f; playerVelocity.z = 0.0f;
             camRotX = 0.0f; camRotY = 0.0f;
             playerMovement = true;
         }

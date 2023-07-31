@@ -89,14 +89,11 @@ typedef struct
 // Player Properties
 vert playerPos = { 1.0f, 0.0f, 0.0f };
 vert prevPlayerPos;
-vert dummyTri[3] = { 0, 0, 2,
-					-2, 0, -2,
-					2, 0, -2 };
 float camRotX, camRotY, camPosY, headPosY;
 
 // Miscellaneous Properties
-bool endGameLoop, noclip, paused, chat_mode, typeCursorVisible;
-int mapNumber = 1, mapNumSwitch, errormessage, playerLeaf;
+bool endGameLoop = false, noclip, paused, chat_mode, typeCursorVisible;
+int mapNumber = 1, mapNumSwitch, errormessage;
 
 int playerHPCurrent = 100, playerAmmoLoaded = 24;
 int playerHPMax = 150, playerAmmoUnloaded = 100;
@@ -111,6 +108,6 @@ static inline void swapthreefloats(float*, float*, float*);
 static inline void swapint(int*, int*);
 static inline void fgets_noNewline(char*, int, FILE*);
 static inline float dot(vert, vert);
-static inline void cross(float, float, float, float, float, float, vert*);
+static inline void cross(vert, vert, vert*);
 
 #endif

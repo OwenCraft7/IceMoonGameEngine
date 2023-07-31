@@ -54,17 +54,14 @@ void videoMode()
     outpw(CRTC_INDEX, 0x0600 + V_BLANK_END);
 }
 
-void flip(int *vis, int *nvis)
+void flip()
 {
-    int temp = *vis;
-    *vis = *nvis;
-    *nvis = temp;
-    nonVisible = *nvis;
-
     while (inp(INPUT_STATUS) & VRETRACE);
-    outpw(CRTC_INDEX, HIGH_ADDRESS | (*vis & 0xff00));
-    outpw(CRTC_INDEX, LOW_ADDRESS | ((*vis << 8) & 0xffff));
+    outpw(CRTC_INDEX, HIGH_ADDRESS | (nonVisible & 0xff00));
+    outpw(CRTC_INDEX, LOW_ADDRESS | ((nonVisible << 8) & 0xffff));
     while (!(inp(INPUT_STATUS) & VRETRACE));
+
+    nonVisible ^= 19200;
 }
 
 static void textMode()
@@ -235,13 +232,11 @@ void drawimage(const image img, const int x, const int y)   // Draws an image in
 
 void free_images()
 {
-    int i = img_count;
-    while (i != 0)
-    {
-        i--;
+    int i;
+    for (i = img_count - 1; i >= 0; i--)
         free(imgnumber[i].pixel);
-    }
-    free(imgnumber);    // After that, clear all image properties
+    free(tempimgdata);
+    free(imgnumber);
     free(blend_map);
     free(multiply_map);
 }

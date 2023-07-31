@@ -163,14 +163,12 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
 {
     int i, j, k, cx[4], cy[4];
     float pu[3], pv[3], cz[4], cu[4], cv[4];
-    float slope, intercept, inverse, n_vector;
-    vert normal, p[3], diff;
+    float slope, intercept, inverse, n_vector, lightDot;
+    vert normal, p[3], diff, edge1, edge2, lightDir;
 
     // Precalculate sine and cosine of player rotation.
-    const float cos_camx = cos(-camRotX);
-    const float cos_camy = cos(camRotY);
-    const float sin_camx = sin(-camRotX);
-    const float sin_camy = sin(camRotY);
+    const float cos_camx = cos(camRotX), cos_camy = cos(camRotY),
+                sin_camx = sin(camRotX), sin_camy = sin(camRotY);
     
     int behindZ = 0; // "behindZ" tells us the number of vertices behind the near clipping plane.
 
@@ -181,8 +179,8 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
         // Get UV coordinates and multiply them with texture width and size respectively.
         // (V is multiplied with size to avoid calculating Width * Height = Size.)
         j = triangle.uv[i];
-        pu[i] = sourceUV[j].u * f_width;
-        pv[i] = sourceUV[j].v * f_size;
+        pu[i] = sourceUV[j].u * f_width - 0.01f;    // Subtract U and V by 0.01 to prevent a UV looping artifact.
+        pv[i] = sourceUV[j].v * f_size - 0.01f;
         
         // Subtract the vertex's position by the camera's position so that the camera is at the origin point.
         j = triangle.v[i];
@@ -191,8 +189,8 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
         diff.z = sourceVert[j].z - playerPos.z;
 
         // Rotate the camera's yaw to 0. Rotate the vertex along with the camera.
-        p[i].x = (cos_camx * diff.x) + (sin_camx * diff.z);
-        diff.z = (-sin_camx * diff.x) + (cos_camx * diff.z);
+        p[i].x = (cos_camx * diff.x) + (-sin_camx * diff.z);
+        diff.z = (sin_camx * diff.x) + (cos_camx * diff.z);
 
         // Rotate the camera's pitch to 0. Rotate the vertex along with the camera.
         p[i].y = (cos_camy * diff.y) + (-sin_camy * diff.z);
@@ -205,22 +203,25 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
     if (behindZ < 3)    // If at least one vertex is in front of the camera:
     {
         // Calculate surface normals
-        cross(p[2].x - p[0].x, p[2].y - p[0].y, p[2].z - p[0].z, p[1].x - p[0].x, p[1].y - p[0].y, p[1].z - p[0].z, &normal);
+        edge1.x = p[2].x - p[0].x; edge1.y = p[2].y - p[0].y; edge1.z = p[2].z - p[0].z;
+        edge2.x = p[1].x - p[0].x; edge2.y = p[1].y - p[0].y; edge2.z = p[1].z - p[0].z;
+        cross(edge1, edge2, &normal);
         normalize(&normal);
-
         n_vector = dot(normal, p[0]);
-
-        // Load triangle's texture
-        load_temptexture(sourceImageArray[triangle.texture]);
 
         // If the surface normal is facing towards the camera:
         if (n_vector < alpha_toggle)
         {
-            if (normal.z < 0.01f)
+            // Load triangle's texture
+            load_temptexture(sourceImageArray[triangle.texture]);
+            lightDir.x = 0.0f; lightDir.y = 0.0f; lightDir.z = -1.0f;
+            lightDot = -dot(normal, lightDir);
+
+            if (lightDot < 0.25f)
                 luminance = 255;
-            else if (normal.z < 0.1f)
+            else if (lightDot < 0.5f)
                 luminance = 218;
-            else if (normal.z < 0.25f)
+            else if (lightDot < 0.75f)
                 luminance = 182;
             else luminance = 145;
 
