@@ -4,18 +4,18 @@ This is a 3D game engine I created in MS-DOS.
 
 ![Alt text](PREVIEW.PNG?raw=true "Preview of the engine.")
 
-If you want to try this engine yourself, follow this setup. This setup assumes you have DOSBox 0.74-3 installed, but you can test this on real hardware too.
+If you want to try this engine yourself, follow this setup. This setup assumes you have DOSBox 0.74-3 installed, but you can test this on real hardware or other emulators too.
 
   ------
 
 You must have the following specifications to run this engine:
 
--	CPU:	Intel Pentium (85 MHz+ recommended)
+-	CPU:	Intel Pentium or better
 -	RAM:	8 MB+
 -	GPU:	VGA or better
--	OS:		MS-DOS 5.0+
--	Storage: (Updated as of July 22 2023)
-	- If you just want to play the game:	At least 569 KB
+-	OS:	MS-DOS 5.0+
+-	Storage: (Updated as of August 2 2023)
+	- If you just want to play the game:	At least 557 KB
 	- If you want to modify the code too:	At least 11.3 MB
 
 First, rename the extracted IceMoonGameEngine-main folder to ICESRC, then place it in your DOS C: drive. Next, in DOS, go to the ICESRC directory and type "play". You can also go to the BIN directory and type "icemoon" to do the same thing.
@@ -23,6 +23,7 @@ First, rename the extracted IceMoonGameEngine-main folder to ICESRC, then place 
   ------
 
 For Windows users using DOSBox, a shortcut is provided for your pleasure, along with these instructions.
+(These instructions are not compatible with DOSBox-X. You can instead click "Open with DOSBox-X" in your right-click menu.)
 
 First, open "ICEMOON.CONF", scroll to the bottom, and change the file path after "mount c" to your DOSBox C: drive location. Next, right click "ICEMOON.CONF" and click "Copy As Path", then open the shortcut's properties. Select everything after "-conf" in "Target:" and paste your text.
 
@@ -52,7 +53,7 @@ I recommend performing a selective installation to save as much storage space as
 
 Delete the installer once finished.
 
-Next, in DOS, go to the ICESRC directory, then type "make". The game will compile and show you if there are any coding errors. "SRC\MAIN.C" will be compiled into "BIN\ICEMOON.EXE".
+Next, in DOS, go to the ICESRC directory and ensure you are located at "C:\ICESRC". If so, type "make". The game will compile and show you if there are any coding errors. "SRC\MAIN.C" will be compiled into "BIN\ICEMOON.EXE".
 
   ------
 
