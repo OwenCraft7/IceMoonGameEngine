@@ -1,10 +1,13 @@
 #ifndef TIME_H
 #define TIME_H
 
-struct timeb delt1, delt2;
+clock_t clockCycles, lastClockUpdate;
 
-int frames, framesPerSecond, frames_quarterSecondUpdate = 0;
-float seconds, seconds_quarterSecondUpdate = 0.25f;
-float deltaTime;
+int frames, framesPerSecond, framesUpdate = 0;
+float seconds, deltaTime, secondsUpdate = 1.0f;
+float inverseClockSpeed;
+
+static inline void updateDeltaTime();
+static inline void updateFPS();
 
 #endif

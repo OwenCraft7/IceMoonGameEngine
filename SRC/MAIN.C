@@ -15,6 +15,7 @@
 #include <i86.h>
 #include <dos.h>
 #include <memory.h>
+#include <time.h>
 
 #include "MISC.C"       // Miscellaneous.
 #include "TIME.C"       // Calculates the delta time and FPS.
@@ -31,11 +32,11 @@
 
 int main(int argc, char *argv[])
 {
-    int i, j;           // Used with for-statements and other
+    int i, j;   // Used with for-statements and other
 
-    sb_detected = sb_detect();  // Detect if SoundBlaster is in computer (or DOS emulator)
+    sb_detected = sb_detect();                      // Detect if SoundBlaster is in computer (or DOS emulator)
     mouseDetect = mouseInit() == 0 ? false : true;  // Detect if there's a mouse connected. Will be set true if connected.
-    loadCfg();  // Load the configuration file and its settings
+    loadCfg();                                      // Load the configuration file and its settings
 
     // ARGUMENTS FROM COMMAND LINE:
     for (i = 1; i < argc; i++)
@@ -46,10 +47,10 @@ int main(int argc, char *argv[])
             noclip = true;
     }
 
-    load_pos("MAPS/TEST2.POS");    // Load the main map
+    load_pos("MAPS/TEST2.POS"); // Load map #2 in the EXAMPLE folder
 
     font_count = 3;
-    fontnumber = calloc(font_count, sizeof(image));   // Allocate memory for fonts to be loaded
+    fontnumber = calloc(font_count, sizeof(image)); // Allocate memory for fonts to be loaded
     fontnumber_vwf = calloc(font_count, sizeof(vwf_settings));
     loadfont("CHAT_0", FONT_CHAT);
     loadfont("DEBUG_0", FONT_DEBUG);
@@ -60,25 +61,25 @@ int main(int argc, char *argv[])
     loadimage("NULL.BMP", &imgnumber[0]);
     loadimage("COLMAPS/BLEND.BMP", &imgnumber[1]);      // A colormap used to blend two pixel colors
     loadimage("COLMAPS/MULTIPLY.BMP", &imgnumber[2]);   // A colormap used to multiply two pixel colors
-    loadimage("GUI/CROSHAIR.BMP", &imgnumber[3]);
-    loadimage("GUI/HEALTH.BMP", &imgnumber[4]);
-    loadimage("GUI/AMMO.BMP", &imgnumber[5]);
-    loadimage("GUI/CURSOR.BMP", &imgnumber[6]);
-    loadimage("GUI/TYPE.BMP", &imgnumber[7]);
-    loadimage("TEXTURES/WIREFRME.BMP", &imgnumber[8]);
+    loadimage("GUI/CROSHAIR.BMP", &imgnumber[3]);       // Crosshair in the screen's middle
+    loadimage("GUI/HEALTH.BMP", &imgnumber[4]);         // HP in the screen's bottom-left corner
+    loadimage("GUI/AMMO.BMP", &imgnumber[5]);           // Ammo in the screen's bottom-right corner
+    loadimage("GUI/CURSOR.BMP", &imgnumber[6]);         // A mouse cursor
+    loadimage("GUI/TYPE.BMP", &imgnumber[7]);           // A text cursor
+    loadimage("TEXTURES/WIREFRME.BMP", &imgnumber[8]);  // A placeholder wireframe texture
 
-    // Shortcuts to the blend and multiply colormaps. Each colormap is both 256x256 pixels in size.
+    // Shortcuts to the blend and multiply colormaps. Each colormap is 256x256 pixels in size.
     blend_map = imgnumber[1].pixel;
     multiply_map = imgnumber[2].pixel;
-    /* NOTE: Perhaps me or someone could simplify both colormaps each into two channels:
-             blue and RG, which would significantly reduce game and RAM size.
+    /* NOTE: Perhaps someone or I could simplify both colormaps to two channels each:
+             blue and RG, which would significantly reduce game storage and RAM size.
 
              The blue channel in both colormaps would be 4x4 pixels large, and repeated on a 4x4 pixel grid.
              The RG channel would be used for both red and green colors, and would be 8x8 pixels large.
-             Green would have the RG channel's size multiplied by 4, and repeated on a 32x32 pixel grid.
-             Red would have the RG channel's size multiplied by 32, and encompass the entire colormap. */
+             Multiply the RG channel's size by 4 for green, and repeat it on a 32x32 pixel grid.
+             Multiply the RG channel's size by 32 for red, and make it encompass the entire colormap. */
 
-    videoMode();        // Switch to VGA Mode X
+    modeX();        // Switch to VGA Mode X
     palette(9, 9, 21);  // Initialize color palette in the 8-8-4 RGB format, adding up to 256 colors.
 
     kbd_start();    // Initialize keyboard input
@@ -86,11 +87,14 @@ int main(int argc, char *argv[])
     mouseLimits(0, 319, 0, 239);
     mousePos(160, 120);
 
-    ftime(&delt1);
-    while (!endGameLoop) // Main game loop.
+    lastClockUpdate = clock();
+    /*                  */
+    /*  MAIN GAME LOOP  */
+    /*                  */
+    while (!endGameLoop)
     {
-        updateDeltaTime();  // Update delta time
-        if (seconds_quarterSecondUpdate < seconds) updateFPS();  // Update frames per second
+        updateDeltaTime();                          // Update delta time
+        if (secondsUpdate < seconds) updateFPS();   // Update frames per second
 
         inputKeyboard();        // Get Player Input
         playerPhysicsUpdate();  // Update Player Physics
@@ -136,9 +140,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    kbd_finish();   // End keyboard input
-    textMode();     // Return to Text Mode
-    logfile();      // Print a text file containing game statistics
+    kbd_finish();       // End keyboard input
+    videoMode(0x03);    // Return to Text Mode
+    logfile();          // Print a text file containing game statistics
 
     // Free a bunch of RAM before we exit the game
     free_mapdata();

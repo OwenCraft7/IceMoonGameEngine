@@ -62,8 +62,8 @@ void texture_hline(const int y, int x1, int x2, float z1, float z2, float u1, fl
                 color = tempimgdata[((int)(u1 * i) & bit_imgwidth) + ((int)(v1 * i) & bit_imgsize)].c;
                 if (color != tempimgTransparent)
                 {
-                    level_pointer[x1] = multiplyColor(color, luminance);  // Draw pixel in the level buffer
-                    dist_pointer[x1] = i;       // Set distance in a specific pixel in the distance buffer
+                    level_pointer[x1] = multiplyColor(color, luminance);    // Draw pixel in the level buffer
+                    dist_pointer[x1] = i;                                   // Set distance in a specific pixel in the distance buffer
                 }
             }
             z1 += slope[0]; u1 += slope[1]; v1 += slope[2];
@@ -82,7 +82,7 @@ void bresenham(int adx, int ady, int sdx, int *x, float *side)  // This function
     }
 }
 
-void drawHalfTri(int startEdge, int y0, int *y1, int triHalf, int x1minx0)    // This function draws either the top or bottom half of a 2D triangle
+void drawHalfTri(int startEdge, int y0, int *y1, int triHalf, int x1minx0)  // This function draws either the top or bottom half of a 2D triangle
 {
     int i, j;
     adx[1] = abs(x1minx0); sdx[1] = sgn(x1minx0); x[1] = 0;
@@ -232,9 +232,9 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                     cz[i] = inverse;
                     cu[i] = pu[i] * inverse;
                     cv[i] = pv[i] * inverse;
-                    inverse *= 160.0f;
-                    cx[i] = p[i].x * inverse + 160;  // Set X on screen
-                    cy[i] = p[i].y * -inverse + 120;  // Set Y on screen
+                    inverse *= HALF_WIDTH;
+                    cx[i] = p[i].x * inverse + HALF_WIDTH;  // Set X on screen
+                    cy[i] = p[i].y * -inverse + HALF_HEIGHT;  // Set Y on screen
                     // Set its coordinates where it would normally go on the screen (0-319, 0-239).
                 }
             else if (behindZ == 1)
@@ -248,9 +248,9 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                         cz[j] = inverse;
                         cu[j] = pu[i] * inverse;
                         cv[j] = pv[i] * inverse;
-                        inverse *= 160.0f;
-                        cx[j] = p[i].x * inverse + 160;  // Set X on screen
-                        cy[j] = p[i].y * -inverse + 120;  // Set Y on screen
+                        inverse *= HALF_WIDTH;
+                        cx[j] = p[i].x * inverse + HALF_WIDTH;  // Set X on screen
+                        cy[j] = p[i].y * -inverse + HALF_HEIGHT;  // Set Y on screen
                         j += 1;
                     }
                     else
@@ -283,14 +283,14 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                     // Calculate X position on screen
                     slope = (p[2].x - p[j].x) * inverse;
                     intercept = p[2].x - slope * p[2].z;
-                    cx[i] = slope + intercept * 16000.0f;
-                    cx[i] += 160;
+                    cx[i] = slope + intercept * HALFW_T_INVS_NC;
+                    cx[i] += HALF_WIDTH;
 
                     // Calculate Y position on screen
                     slope = (p[2].y - p[j].y) * inverse;
                     intercept = p[2].y - slope * p[2].z;
-                    cy[i] = slope + intercept * -16000.0f;
-                    cy[i] += 120;
+                    cy[i] = slope + intercept * -HALFW_T_INVS_NC;
+                    cy[i] += HALF_HEIGHT;
 
                     // Calculate U texture coordinate
                     slope = (pu[2] - pu[j]) * inverse;
@@ -318,9 +318,9 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                         cz[i] = inverse;
                         cu[i] = pu[i] * inverse;
                         cv[i] = pv[i] * inverse;
-                        inverse *= 160.0f;
-                        cx[i] = p[i].x * inverse + 160;  // Set X on screen
-                        cy[i] = p[i].y * -inverse + 120;  // Set Y on screen
+                        inverse *= HALF_WIDTH;
+                        cx[i] = p[i].x * inverse + HALF_WIDTH;  // Set X on screen
+                        cy[i] = p[i].y * -inverse + HALF_HEIGHT;  // Set Y on screen
                         j = i; // j = the vertex number that's in front.
                     }
                 for (i = 0; i < 3; i++) // For each vertex:
@@ -334,14 +334,14 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                         // Calculate X position on screen
                         slope = (p[j].x - p[i].x) * inverse;
                         intercept = p[j].x - slope * p[j].z;
-                        cx[i] = slope + intercept * 16000.0f;
-                        cx[i] += 160;
+                        cx[i] = slope + intercept * HALFW_T_INVS_NC;
+                        cx[i] += HALF_WIDTH;
 
                         // Calculate Y position on screen
                         slope = (p[j].y - p[i].y) * inverse;
                         intercept = p[j].y - slope * p[j].z;
-                        cy[i] = slope + intercept * -16000.0f;
-                        cy[i] += 120;
+                        cy[i] = slope + intercept * -HALFW_T_INVS_NC;
+                        cy[i] += HALF_HEIGHT;
 
                         // Calculate U texture coordinate
                         slope = (pu[j] - pu[i]) * inverse;

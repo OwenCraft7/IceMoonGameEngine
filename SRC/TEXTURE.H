@@ -3,6 +3,7 @@
 
 const float NEAR_CLIP = 0.01f;
 const float INVS_NEAR_CLIP = 100.0f;
+const float HALFW_T_INVS_NC = 16000.0f;	// Half Screen Width (160px) times inverse near clip
 
 int luminance;
 float alpha_toggle;  // If texture has transparency or translucency, disable backface culling by setting alpha_toggle to 999.0f.

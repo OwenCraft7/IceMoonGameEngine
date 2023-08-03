@@ -13,7 +13,7 @@
 
 #include "GFX.H"
 
-void asmVideoCode(uint8_t mode)
+static void videoMode(uint8_t mode)
 {
     _asm
     {
@@ -23,28 +23,25 @@ void asmVideoCode(uint8_t mode)
     }
 }
 
-void videoMode()
+void modeX()
 {
-    unsigned long* ptr = (unsigned long*)VGA;            /* used for faster screen clearing */
-    asmVideoCode(0x13);
+    videoMode(0x13);
 
-    /* turn off chain-4 mode */
+    // Turn off chain-4 mode
     outp(SC_INDEX, MEMORY_MODE);
     outp(SC_DATA, 0x06);
-
-    outpw(SC_INDEX, 0xff02);        /* set map mask to all 4 planes */
-    memset(ptr, 0, 0x4000);         /* clear all 256K of memory */
-
-    /* turn off long mode */
+    // Turn off long mode
     outp(CRTC_INDEX, UNDERLINE_LOC);
     outp(CRTC_DATA, 0x00);
-    /* turn on byte mode */
+    // Turn on byte mode
     outp(CRTC_INDEX, MODE_CONTROL);
     outp(CRTC_DATA, 0xe3);
+    // Clear VGA memory
+    outp(SC_INDEX, MAP_MASK);
+    outp(SC_DATA, 0xFF);
 
-    /* turn off write protect */
+    // Turn off write protect
     outpw(CRTC_INDEX, 0x2c00 + V_RETRACE_END);
-
     outpw(CRTC_INDEX, 0x0d00 + V_TOTAL);
     outpw(CRTC_INDEX, 0x3e07);
     outpw(CRTC_INDEX, 0xea00 + V_RETRACE_START);
@@ -62,11 +59,6 @@ void flip()
     while (!(inp(INPUT_STATUS) & VRETRACE));
 
     nonVisible ^= 19200;
-}
-
-static void textMode()
-{
-    asmVideoCode(0x03);
 }
 
 void palette(const int r_multi, const int g_multi, const int b_multi)

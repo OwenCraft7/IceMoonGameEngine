@@ -50,7 +50,7 @@ bool lineTriangleIntersection(vert TriA, vert TriB, vert TriC, vert LinePointA, 
 bool sphereTriangleCollision(vert TriA, vert TriB, vert TriC, vert* SphereCenter, float SphereRadius)	// This function too has inaccurate physics.
 {
 	vert edge1, edge2, v0, closest, collisionNormal;
-	float a, b, c, d, e, s, t, dist, det, inverseLength, numer, denom, tmp1, tmp2;
+	float a, b, c, d, e, s, t, det, dist, numer, denom, tmp1, tmp2;
 
 	edge1.x = TriB.x - TriA.x;
 	edge1.y = TriB.y - TriA.y;
@@ -193,16 +193,19 @@ bool sphereTriangleCollision(vert TriA, vert TriB, vert TriC, vert* SphereCenter
 	closest.x = TriA.x + s * edge1.x + t * edge2.x;
 	closest.y = TriA.y + s * edge1.y + t * edge2.y;
 	closest.z = TriA.z + s * edge1.z + t * edge2.z;
+	dist = SphereRadius - distance(closest, *SphereCenter);
 
-	if (distance(closest, *SphereCenter) <= SphereRadius)
+	if (dist >= 0.0f)
 	{
 		collisionNormal.x = SphereCenter->x - closest.x;
 		collisionNormal.y = SphereCenter->y - closest.y;
 		collisionNormal.z = SphereCenter->z - closest.z;
 		normalize(&collisionNormal);
-		SphereCenter->x = closest.x + collisionNormal.x * (SphereRadius + 0.01f);
-		SphereCenter->y = closest.y + collisionNormal.y * (SphereRadius + 0.01f);
-		SphereCenter->z = closest.z + collisionNormal.z * (SphereRadius + 0.01f);
+		SphereCenter->x += collisionNormal.x * dist;
+		SphereCenter->y += collisionNormal.y * dist;
+		SphereCenter->z += collisionNormal.z * dist;
+		if (collisionNormal.y >= 0.7f)
+			playerIsTouchingGround = true;
 		return true;
 	}
 	else return false;
@@ -211,19 +214,18 @@ bool sphereTriangleCollision(vert TriA, vert TriB, vert TriC, vert* SphereCenter
 void playerPhysicsUpdate()
 {
 	int i, lastTri;
-	// Initialize previous player position
-	prevPlayerPos.x = playerPos.x; prevPlayerPos.y = playerPos.y; prevPlayerPos.z = playerPos.z;
+	prevPlayerPos.x = playerPos.x; prevPlayerPos.y = playerPos.y; prevPlayerPos.z = playerPos.z;	// Initialize previous player position
 	
 	if (!noclip)	// If player is not in noclip mode,
 	{
 		// Calculate velocity for the X and Z axes,
 		playerVelocity.x = deltaTime * ((sin(camRotX) * axis_speed[0]) + (cos(camRotX) * axis_speed[1]));
 		playerVelocity.z = deltaTime * ((cos(camRotX) * axis_speed[0]) - (sin(camRotX) * axis_speed[1]));
-		if (axis_keyDown[2] > 0.0f && playerIsTouchingGround)  // If space bar is held down and player is on the ground
-		{
-			playerVelocity.y = playerJumpVelocity;	// Update player's Y velocity to jump
-		}
-		else if (!playerIsTouchingGround)			// Else, if player is in the air
+		playerPos.x += playerVelocity.x; playerPos.z += playerVelocity.z;
+
+		if (axis_keyDown[2] > 0.0f && playerIsTouchingGround)	// If space bar is held down and player is on the ground
+			playerVelocity.y = playerJumpVelocity;				// Update player's Y velocity to jump
+		else if (!playerIsTouchingGround)						// Else, if player is in the air
 		{
 			playerVelocity.y += deltaTime * g_constant;	// Increase or decrease Y velocity depending on the gravity
 			if (playerVelocity.y < terminal_velocity)	// Also check for terminal velocity
@@ -233,7 +235,6 @@ void playerPhysicsUpdate()
 			playerVelocity.y = 0.0f;	// If player is touching the ground and there's no space bar pressed, set Y velocity to 0.
 
 		playerPos.y += deltaTime * playerVelocity.y;	// Update player's Y position
-
 		playerPos.y += 0.25f;
 
 		playerIsTouchingGround = false;
@@ -241,10 +242,8 @@ void playerPhysicsUpdate()
 		lastTri = (prevPlayerLeaf + 1 != leaf_count) ? map_leaf[prevPlayerLeaf + 1] : tri_count;
 		for (i = map_leaf[prevPlayerLeaf]; i < lastTri; i++)
 		{
-			//if (lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos))
-			//	playerIsTouchingGround = true;
-			if (sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f))
-				playerIsTouchingGround = true;
+			//lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos);
+			sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f);
 		}
 		checkRootNode(playerPos.x, playerPos.y, playerPos.z, false, &playerLeaf);
 		if (playerLeaf != prevPlayerLeaf)
@@ -252,10 +251,8 @@ void playerPhysicsUpdate()
 			lastTri = (playerLeaf + 1 != leaf_count) ? map_leaf[playerLeaf + 1] : tri_count;
 			for (i = map_leaf[playerLeaf]; i < lastTri; i++)
 			{
-				//if (lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos))
-				//	playerIsTouchingGround = true;
-				if (sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f))
-					playerIsTouchingGround = true;
+				//lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos);
+				sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f);
 			}
 		}
 
@@ -267,9 +264,8 @@ void playerPhysicsUpdate()
 		playerVelocity.x = deltaTime * ((sin(camRotX) * axis_keyDown[0]) + (cos(camRotX) * axis_keyDown[1]));
 		playerVelocity.y = deltaTime * axis_keyDown[2];
 		playerVelocity.z = deltaTime * ((cos(camRotX) * axis_keyDown[0]) - (sin(camRotX) * axis_keyDown[1]));
-		playerPos.y += playerVelocity.y;
+		playerPos.x += playerVelocity.x; playerPos.y += playerVelocity.y; playerPos.z += playerVelocity.z;
 	}
-	playerPos.x += playerVelocity.x; playerPos.z += playerVelocity.z;
 
 	if (prevPlayerPos.x != playerPos.x || prevPlayerPos.y != playerPos.y || prevPlayerPos.z != playerPos.z)
 		playerMovement = true;	// If true, the level screen buffer will refresh.
