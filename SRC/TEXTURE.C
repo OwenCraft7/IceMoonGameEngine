@@ -16,13 +16,10 @@ void load_temptexture(image sourceImage)    // Texture MUST be a power of two. O
             tempimgTransparent = sourceImage.transparent;
             bit_imgwidth = roundpowtwo(sourceImage.width);
             bit_imgsize = bit_imgwidth * roundpowtwo(sourceImage.height);
-            f_width = bit_imgwidth;  f_size = bit_imgsize;
+            f_width = bit_imgwidth; f_size = bit_imgsize;
             bit_imgsize -= bit_imgwidth;
             bit_imgwidth -= 1;
-            if (tempimgTransparent == -1)
-                alpha_toggle = 0.0f;
-            else
-                alpha_toggle = 999.0f;
+            alpha_toggle = (tempimgTransparent == -1) ? 0.0f : 999.0f;
         }
         else
         {
@@ -38,55 +35,46 @@ void load_temptexture(image sourceImage)    // Texture MUST be a power of two. O
 void texture_hline(const int y, int x1, int x2, float z1, float z2, float u1, float u2, float v1, float v2) // Only draw a line given that Z, U, and V are inversed and interpolated.
 {
     float slope[3], i;
-    int color;
+    int color, u, v;
     float *dist_pointer = dist_buffer[y];
     char *level_pointer = level_buffer[y];
-    
-    if (x1 < 320 && x2 > -1)
+
+    i = 1.0f / (x2 - x1);
+    slope[0] = (z2 - z1) * i; slope[1] = (u2 - u1) * i; slope[2] = (v2 - v1) * i;
+    if (x1 < 0)
     {
-        i = 1.0f / (x2 - x1);
-        slope[0] = (z2 - z1) * i; slope[1] = (u2 - u1) * i; slope[2] = (v2 - v1) * i;
+        z1 -= slope[0] * x1; u1 -= slope[1] * x1; v1 -= slope[2] * x1;
+        x1 = 0;
+    }
+    if (x2 >= SCREEN_WIDTH) x2 = SCREEN_WIDTH - 1;
 
-        if (x1 < 0)
-        {
-            z1 -= slope[0] * x1; u1 -= slope[1] * x1; v1 -= slope[2] * x1;
-            x1 = 0;
-        }
-        if (x2 > 319) x2 = 319;
-
-        while (x1 <= x2)
+    while (x1 <= x2)
+    {
+        if (dist_pointer[x1] <= z1)
         {
             i = 1.0f / z1;
-            if (dist_pointer[x1] >= i || skipDistBuffer)
-            {
-                color = tempimgdata[((int)(u1 * i) & bit_imgwidth) + ((int)(v1 * i) & bit_imgsize)].c;
-                if (color != tempimgTransparent)
-                {
-                    level_pointer[x1] = multiplyColor(color, luminance);    // Draw pixel in the level buffer
-                    dist_pointer[x1] = i;                                   // Set distance in a specific pixel in the distance buffer
-                }
-            }
-            z1 += slope[0]; u1 += slope[1]; v1 += slope[2];
-            x1++;
+            u = u1 * i; v = v1 * i;
+            color = tempimgdata[(u & bit_imgwidth) + (v & bit_imgsize)].c;
+
+            // Uncomment everything below in this if-statement if you want rendered triangles to support transparency and shading.
+
+            // if (color != tempimgTransparent)
+            // {
+            // level_pointer[x1] = multiplyColor(color, luminance);
+            level_pointer[x1] = color;
+            dist_pointer[x1] = z1;
+            // }
         }
+        z1 += slope[0]; u1 += slope[1]; v1 += slope[2];
+        x1++;
     }
 }
 
-void bresenham(int adx, int ady, int sdx, int *x, float *side)  // This function calculates the left and right edges for a 2D triangle
+void drawHalfTri(int startEdge, int y0, int *y1, int triHalf)//, int x1minx0)  // This function draws either the top or bottom half of a 2D triangle
 {
-    *x += adx;
-    while (*x >= ady)
-    {
-        *x -= ady;
-        *side += sdx;
-    }
-}
-
-void drawHalfTri(int startEdge, int y0, int *y1, int triHalf, int x1minx0)  // This function draws either the top or bottom half of a 2D triangle
-{
-    int i, j;
-    adx[1] = abs(x1minx0); sdx[1] = sgn(x1minx0); x[1] = 0;
+    int i;
     reversed = (slope[0][1] < slope[0][0]) ? triHalf ^ 1 : triHalf;
+    notReversed = reversed ^ 1;
     edge[0][1] = startEdge;
     if (y0 < 0)
     {
@@ -94,14 +82,13 @@ void drawHalfTri(int startEdge, int y0, int *y1, int triHalf, int x1minx0)  // T
             edge[0][i] -= slope[0][i] * y0;
         y0 = 0;
     }
-    if (*y1 > 240) *y1 = 240;
-    for (i = y0; i < *y1; i++)
+    if (*y1 > SCREEN_HEIGHT) *y1 = SCREEN_HEIGHT;
+    while (y0 < *y1)
     {
-        texture_hline(i, edge[0][reversed], edge[0][reversed ^ 1], edge[1][reversed], edge[1][reversed ^ 1], edge[2][reversed], edge[2][reversed ^ 1], edge[3][reversed], edge[3][reversed ^ 1]);
-        bresenham(adx[0], ady[0], sdx[0], &x[0], &edge[0][0]);
-        bresenham(adx[1], ady[1], sdx[1], &x[1], &edge[0][1]);
-        for (j = 0; j < 6; j++)
-            edge[1][j] += slope[1][j];
+        texture_hline(y0, edge[0][reversed], edge[0][notReversed], edge[1][reversed], edge[1][notReversed], edge[2][reversed], edge[2][notReversed], edge[3][reversed], edge[3][notReversed]);
+        for (i = 0; i < 8; i++)
+            edge[0][i] += slope[0][i];
+        y0++;
     }
 }
 
@@ -125,41 +112,38 @@ void texture_twodimtri(int x0, int x1, int x2, int y0, int y1, int y2, float z0,
         swapint(&x1, &x2); swapint(&y1, &y2);
         swapfloat(&z1, &z2); swapfloat(&u1, &u2); swapfloat(&v1, &v2);
     }
-    if (y2 > -1 && y0 < 240)    // If triangle is inside screen
+    if (y2 >= 0 && y0 < SCREEN_HEIGHT)    // If triangle is inside the screen's vertical boundaries
     {
-        i = x2 - x0; adx[0] = abs(i); sdx[0] = sgn(i);
-        ady[0] = y2 - y0; x[0] = 0; k = 1.0f / ady[0];
+        k = 1.0f / (y2 - y0);
         slope[0][0] = (x2 - x0) * k; slope[1][0] = (z2 - z0) * k;
         slope[2][0] = (u2 - u0) * k; slope[3][0] = (v2 - v0) * k;
         edge[0][0] = x0; edge[1][0] = z0; edge[2][0] = u0; edge[3][0] = v0;
         if (y0 != y1)
         {
-            ady[1] = y1 - y0;
             edge[1][1] = z0; edge[2][1] = u0; edge[3][1] = v0;
             if (y1 > -1)
             {
-                k = 1.0f / ady[1];
+                k = 1.0f / (y1 - y0);
                 slope[0][1] = (x1 - x0) * k; slope[1][1] = (z1 - z0) * k;
                 slope[2][1] = (u1 - u0) * k; slope[3][1] = (v1 - v0) * k;
-                drawHalfTri(x0, y0, &y1, TRI_TOP_HALF, x1 - x0);
+                drawHalfTri(x0, y0, &y1, TRI_TOP_HALF);
             }
             else
                 for (i = 0; i < 8; i++)
-                    edge[0][i] += slope[0][i] * ady[1];
+                    edge[0][i] += slope[0][i] * (y1 - y0);
         }
-        if (y1 < 240 && y1 != y2)
+        if (y1 < SCREEN_HEIGHT && y1 != y2)
         {
-            ady[1] = y2 - y1;
             edge[1][1] = z1; edge[2][1] = u1; edge[3][1] = v1;
-            k = 1.0f / ady[1];
+            k = 1.0f / (y2 - y1);
             slope[0][1] = (x2 - x1) * k; slope[1][1] = (z2 - z1) * k;
             slope[2][1] = (u2 - u1) * k; slope[3][1] = (v2 - v1) * k;
-            drawHalfTri(x1, y1, &y2, TRI_BOTTOM_HALF, x2 - x1);
+            drawHalfTri(x1, y1, &y2, TRI_BOTTOM_HALF);
         }
     }
 }
 
-void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sourceImageArray, bool ignoreDistanceBuffer)  // This function takes a 3D triangle and converts the vertices to 2D points on the screen
+void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sourceImageArray)  // This function takes a 3D triangle and converts the vertices to 2D points on the screen
 {
     int i, j, k, cx[4], cy[4];
     float pu[3], pv[3], cz[4], cu[4], cv[4];
@@ -171,16 +155,15 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                 sin_camx = sin(camRotX), sin_camy = sin(camRotY);
     
     int behindZ = 0; // "behindZ" tells us the number of vertices behind the near clipping plane.
-
-    skipDistBuffer = ignoreDistanceBuffer;
+    load_temptexture(sourceImageArray[triangle.texture]);   // Load triangle's texture
 
     for (i = 0; i < 3; i++) // For the three vertices:
     {
         // Get UV coordinates and multiply them with texture width and size respectively.
         // (V is multiplied with size to avoid calculating Width * Height = Size.)
         j = triangle.uv[i];
-        pu[i] = sourceUV[j].u * f_width - 0.01f;    // Subtract U and V by 0.01 to prevent a UV looping artifact.
-        pv[i] = sourceUV[j].v * f_size - 0.01f;
+        pu[i] = sourceUV[j].u * f_width - 0.001f;    // Subtract U and V by 0.001 to prevent a UV looping artifact.
+        pv[i] = sourceUV[j].v * f_size - 0.001f;
         
         // Subtract the vertex's position by the camera's position so that the camera is at the origin point.
         j = triangle.v[i];
@@ -189,11 +172,11 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
         diff.z = sourceVert[j].z - playerPos.z;
 
         // Rotate the camera's yaw to 0. Rotate the vertex along with the camera.
-        p[i].x = (cos_camx * diff.x) + (-sin_camx * diff.z);
+        p[i].x = (cos_camx * diff.x) - (sin_camx * diff.z);
         diff.z = (sin_camx * diff.x) + (cos_camx * diff.z);
 
         // Rotate the camera's pitch to 0. Rotate the vertex along with the camera.
-        p[i].y = (cos_camy * diff.y) + (-sin_camy * diff.z);
+        p[i].y = (cos_camy * diff.y) - (sin_camy * diff.z);
         p[i].z = (sin_camy * diff.y) + (cos_camy * diff.z);
 
         if (p[i].z < NEAR_CLIP) // If the vertex is behind the near clipping plane,
@@ -212,8 +195,6 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
         // If the surface normal is facing towards the camera:
         if (n_vector < alpha_toggle)
         {
-            // Load triangle's texture
-            load_temptexture(sourceImageArray[triangle.texture]);
             lightDir.x = 0.0f; lightDir.y = 0.0f; lightDir.z = -1.0f;
             lightDot = -dot(normal, lightDir);
 
@@ -361,15 +342,4 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                 texture_twodimtri(cx[0], cx[1], cx[2], cy[0], cy[1], cy[2], cz[0], cz[1], cz[2], cu[0], cu[1], cu[2], cv[0], cv[1], cv[2]);
         }
     }
-}
-
-void free_textures()
-{
-    int i = texture_count;
-    while (i != 0)
-    {
-        i--;
-        free(map_texture[i].pixel);
-    }
-    free(map_texture);
 }

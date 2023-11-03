@@ -9,17 +9,14 @@
 
 void free_mapdata()
 {
-    int i = texture_count;
+    int i;
     free(map_vert);
     free(map_uv);
     free(map_tri);
     free(map_node);
     free(map_leaf);
-    while (i != 0)
-    {
-        i--;
+    for (i = texture_count - 1; i >= 0; i--)
         free(map_texture[i].pixel);
-    }
     free(map_texture);
     free(map_entity);
 }

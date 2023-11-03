@@ -11,7 +11,7 @@ void drawleaf(const int select)
     int i = select + 1;
     int end = (i != leaf_count) ? map_leaf[i] : tri_count;
     for (i = map_leaf[select]; i < end; i++)   // Keep in mind, triangles are sorted by leaf number
-        texture_tri(map_tri[i], map_vert, map_uv, map_texture, false);
+        texture_tri(map_tri[i], map_vert, map_uv, map_texture);
 }
 
 static void checkfront(const node nod)

@@ -89,7 +89,7 @@ void displayAllText() // Prints everything text-related on screen
         {
             typeXPosition_Screen = 0;
             for (i = 0; i < typeXPosition_Text; i++)  // This focuses on the chat text cursor
-                typeXPosition_Screen += fontnumber_vwf[FONT_CHAT].charcode[type_line[i]];
+                typeXPosition_Screen += fontnumber_vwf[FONT_CHAT].charcode[(int)type_line[i]];
             drawimage(imgnumber[7], typeXPosition_Screen, 200);
         }
     }

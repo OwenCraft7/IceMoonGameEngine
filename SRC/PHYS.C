@@ -6,42 +6,33 @@
 
 #include "PHYS.H"
 
-bool lineTriangleIntersection(vert TriA, vert TriB, vert TriC, vert LinePointA, vert* LinePointB)	// This function has wacky physics and needs fixing.
+bool lineTriangleIntersection(vert TriA, vert TriB, vert TriC, vert LinePointA, vert LinePointB, vert *Intersect)	// This function has wacky physics and needs fixing.
 {
-	vert edge1, edge2, n, ao, dao, linePosDifference;
-	float det, inverseDet, u, v, t;
+	vert e1, e2, n;		vert ao, dao, rayDir;
+	float t, u, v;		float det, invdet;
 
-	edge1.x = TriB.x - TriA.x;
-	edge1.y = TriB.y - TriA.y;
-	edge1.z = TriB.z - TriA.z;
+	rayDir.x = LinePointB.x - LinePointA.x;		rayDir.y = LinePointB.y - LinePointA.y;		rayDir.z = LinePointB.z - LinePointA.z;
+	normalize(&rayDir);
 
-	edge2.x = TriC.x - TriA.x;
-	edge2.y = TriC.y - TriA.y;
-	edge2.z = TriC.z - TriA.z;
+	e2.x = TriB.x - TriA.x;		e2.y = TriB.y - TriA.y;		e2.z = TriB.z - TriA.z;
+	e1.x = TriC.x - TriA.x;		e1.y = TriC.y - TriA.y;		e1.z = TriC.z - TriA.z;
+	cross(e1, e2, &n);
 
-	linePosDifference.x = LinePointB->x - LinePointA.x;
-	linePosDifference.y = LinePointB->y - LinePointA.y;
-	linePosDifference.z = LinePointB->z - LinePointA.z;
-	normalize(&linePosDifference);
+	det = -dot(rayDir, n);
+	invdet = 1.0f / det;
 
-	ao.x = LinePointA.x - TriA.x;
-	ao.y = LinePointA.y - TriA.y;
-	ao.z = LinePointA.z - TriA.z;
+	ao.x = LinePointA.x - TriA.x;	ao.y = LinePointA.y - TriA.y;	ao.z = LinePointA.z - TriA.z;
+	cross(ao, rayDir, &dao);
 
-	cross(ao, linePosDifference, &dao);
-	cross(edge1, edge2, &n);
-	det = -dot(linePosDifference, n);
-	inverseDet = 1.0f / det;
+	u = dot(e2, dao) * invdet;
+	v = -dot(e1, dao) * invdet;
+	t = dot(ao, n) * invdet;
 
-	u = dot(edge2, dao) * inverseDet;
-	v = -dot(edge1, dao) * inverseDet;
-	t = dot(ao, n) * inverseDet;
-
-	if (fabs(det) >= 1e-6 && t < distance(LinePointA, *LinePointB) && u >= 0.0f && v >= 0.0f && (u + v) <= 1.0f)
+	if (det >= 1e-6 && t >= 0.0 && u >= 0.0 && v >= 0.0 && (u + v) <= 1.0 && t < distance(LinePointA, LinePointB))
 	{
-		LinePointB->x = LinePointA.x + t * linePosDifference.x;
-		LinePointB->y = LinePointA.y + t * linePosDifference.y;
-		LinePointB->z = LinePointA.z + t * linePosDifference.z;
+		Intersect->x = LinePointA.x + rayDir.x * t;
+		Intersect->y = LinePointA.y + rayDir.y * t;
+		Intersect->z = LinePointA.z + rayDir.z * t;
 		return true;
 	}
 	else return false;
@@ -216,49 +207,48 @@ void playerPhysicsUpdate()
 	int i, lastTri;
 	prevPlayerPos.x = playerPos.x; prevPlayerPos.y = playerPos.y; prevPlayerPos.z = playerPos.z;	// Initialize previous player position
 	
-	if (!noclip)	// If player is not in noclip mode,
+	if (!noclip)	// If player cannot clip through everything,
 	{
 		// Calculate velocity for the X and Z axes,
 		playerVelocity.x = deltaTime * ((sin(camRotX) * axis_speed[0]) + (cos(camRotX) * axis_speed[1]));
 		playerVelocity.z = deltaTime * ((cos(camRotX) * axis_speed[0]) - (sin(camRotX) * axis_speed[1]));
 		playerPos.x += playerVelocity.x; playerPos.z += playerVelocity.z;
 
-		if (axis_keyDown[2] > 0.0f && playerIsTouchingGround)	// If space bar is held down and player is on the ground
-			playerVelocity.y = playerJumpVelocity;				// Update player's Y velocity to jump
-		else if (!playerIsTouchingGround)						// Else, if player is in the air
+		if (playerIsTouchingGround)						// If player is on the ground...
 		{
-			playerVelocity.y += deltaTime * g_constant;	// Increase or decrease Y velocity depending on the gravity
-			if (playerVelocity.y < terminal_velocity)	// Also check for terminal velocity
-				playerVelocity.y = terminal_velocity;
+			if (axis_keyDown[2] > 0.0f)						// If spacebar is pressed...
+				playerVelocity.y = playerJumpVelocity;			// Update player's Y velocity to jump.
+			else playerVelocity.y = 0.0f;					// Else, set Y velocity to 0.
 		}
-		else
-			playerVelocity.y = 0.0f;	// If player is touching the ground and there's no space bar pressed, set Y velocity to 0.
+		else											// Else, if player is in the air...
+		{
+			playerVelocity.y += deltaTime * gravityVelocity;	// Increase or decrease Y velocity depending on the gravity.
+			if (playerVelocity.y < terminalVelocity)			// Also, check for terminal velocity.
+				playerVelocity.y = terminalVelocity;
+		}
 
 		playerPos.y += deltaTime * playerVelocity.y;	// Update player's Y position
 		playerPos.y += 0.25f;
 
 		playerIsTouchingGround = false;
+
+		// Check the node leaf the player was in the previous frame.
 		checkRootNode(prevPlayerPos.x, prevPlayerPos.y, prevPlayerPos.z, false, &prevPlayerLeaf);
+
+		// Check the last triangle in that node leaf.
 		lastTri = (prevPlayerLeaf + 1 != leaf_count) ? map_leaf[prevPlayerLeaf + 1] : tri_count;
+
+		// For all triangles in that node leaf, do a line-triangle intersection test, where the line goes from the player's previous location to its current one.
 		for (i = map_leaf[prevPlayerLeaf]; i < lastTri; i++)
-		{
-			//lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos);
+			lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, playerPos, &playerPos);
+
+		// For all triangles in the map, test triangle collision on the player itself.
+		for (i = 0; i < tri_count; i++)
 			sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f);
-		}
-		checkRootNode(playerPos.x, playerPos.y, playerPos.z, false, &playerLeaf);
-		if (playerLeaf != prevPlayerLeaf)
-		{
-			lastTri = (playerLeaf + 1 != leaf_count) ? map_leaf[playerLeaf + 1] : tri_count;
-			for (i = map_leaf[playerLeaf]; i < lastTri; i++)
-			{
-				//lineTriangleIntersection(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], prevPlayerPos, &playerPos);
-				sphereTriangleCollision(map_vert[map_tri[i].v[0]], map_vert[map_tri[i].v[1]], map_vert[map_tri[i].v[2]], &playerPos, 0.25f);
-			}
-		}
 
 		playerPos.y -= 0.25f;
 	}
-	else	// If player is in noclip mode,
+	else	// If player can clip through everything,
 	{
 		// Calculate player velocity for all three axes,
 		playerVelocity.x = deltaTime * ((sin(camRotX) * axis_keyDown[0]) + (cos(camRotX) * axis_keyDown[1]));

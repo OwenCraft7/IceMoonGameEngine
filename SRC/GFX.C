@@ -222,13 +222,26 @@ void drawimage(const image img, const int x, const int y)   // Draws an image in
     }
 }
 
+/*void drawMemory(int page)   // Draws the game's RAM on screen in 1-byte pixels
+{
+    int x, y;
+    int *i;
+    i = page << 10;
+    for (y = 56; y < 168; y++)
+        for (x = 32; x < 288; x++)
+        {
+            pixel(x, y, (char)*i);
+            i++;
+        }
+}*/
+
 void free_images()
 {
     int i;
     for (i = img_count - 1; i >= 0; i--)
         free(imgnumber[i].pixel);
-    free(tempimgdata);
     free(imgnumber);
+    free(tempimgdata);
     free(blend_map);
     free(multiply_map);
 }

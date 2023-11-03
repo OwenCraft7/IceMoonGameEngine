@@ -59,9 +59,10 @@ void kbd_finish()   // restore the original keyboard irq handler - required if k
 // returns an integer array with each entry representing a keypress, mapped to KeyCode enum
 const uint16_t *kbd_updateInput()   
 {
-    uint8_t key;
+    unsigned char key = 0;
     // get last key and flush keyboard buffer
-    _asm {
+    _asm
+    {
         in al, 60h
         mov key, al
         in al, 61h
@@ -76,7 +77,6 @@ const uint16_t *kbd_updateInput()
         mov al, 0h
         int 21h
     }
-
     if (key < 0x80)
     {
         keysDown[key] = 1;
@@ -116,10 +116,9 @@ static void kbd_flush() // clear pressed key states - not needed if using custom
 
 void detectKeysChat()
 {
-    char keyCodePressed = kbd_keyPressed(keyDown);
     char characterToType = keycodeToChar[keyDown + shiftKeyDown * 81];
 
-    if (keyCodePressed)
+    if (kbd_keyPressed(keyDown))
     {
         if (characterToType != '\0')
         {
@@ -154,9 +153,9 @@ void detectKeysChat()
                 else
                     typeXPosition_Text = playerNameLengthPlusTwo;
             }
-            else if (keyDown == ESC)   // If escape pressed,
-                chat_mode = false;  // Hide chat
-            else if (keyDown == ENTER) // Send a message with the enter key
+            else if (keyDown == ESC)    // If escape pressed,
+                chat_mode = false;      // Hide chat
+            else if (keyDown == ENTER)  // Send a message with the enter key
             {
                 scrollChatUp();
                 snprintf(chat_line[19], CHAT_LINE_WITHNULL, "%s", type_line);
@@ -203,7 +202,7 @@ void inputKeyboard()
         if (kbd_keyPressed(M)) // If M pressed,
         {
             mouseDetect = !mouseDetect; //  Toggle mouse and arrow keys for camera rotation and interaction.
-            mousePos(160, 120); // Center the mouse.
+            mousePos(HALF_WIDTH, HALF_HEIGHT); // Center the mouse.
         }
         if (kbd_keyPressed(V))  // If V pressed,
             noclip = !noclip;   // Toggle noclip
@@ -211,11 +210,11 @@ void inputKeyboard()
         if (mouseDetect == true)    // If mouse is plugged in,
         {
             //  Modify camera rotation based on mouse movement.
-            camRotX += (mouseX - 160) * rotationSpeed * deltaTime;
-            camRotY -= (mouseY - 120) * rotationSpeed * deltaTime;
-            if (mouseX - 160 != 0 || mouseY - 120 != 0)
+            camRotX += (mouseX - HALF_WIDTH) * rotationSpeed * deltaTime;
+            camRotY -= (mouseY - HALF_HEIGHT) * rotationSpeed * deltaTime;
+            if (mouseX - HALF_WIDTH != 0 || mouseY - HALF_HEIGHT != 0)
                 playerMovement = true;
-            mousePos(160, 120); // Center the mouse
+            mousePos(HALF_WIDTH, HALF_HEIGHT); // Center the mouse
 
             if (mouseLeftDown) itemKey();       //  Left-click function for weapons and misc. items.
             if (mouseRightDown) interactKey();  //  Right-click function for talking to NPCs, activating switches, and more.
@@ -279,9 +278,9 @@ void inputKeyboard()
         detectKeysChat();
     }
 
-    //  Limit player X rotation between -180 and 180 degrees, and make it wrap around.
-    if (camRotX > PI)               camRotX = -PI + 0.001f;
-    else if (camRotX < -PI)         camRotX = PI - 0.001f;
+    // Limit player X rotation between -180 and 180 degrees, and make it wrap around.
+    if (camRotX > PI)               camRotX -= PI2;
+    else if (camRotX < -PI)         camRotX += PI2;
     // Limit player Y rotation between -90 and 90 degrees.
     if (camRotY > HALF_PI)          camRotY = HALF_PI;
     else if (camRotY < -HALF_PI)    camRotY = -HALF_PI;

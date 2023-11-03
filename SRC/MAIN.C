@@ -79,13 +79,12 @@ int main(int argc, char *argv[])
              Multiply the RG channel's size by 4 for green, and repeat it on a 32x32 pixel grid.
              Multiply the RG channel's size by 32 for red, and make it encompass the entire colormap. */
 
-    modeX();        // Switch to VGA Mode X
+    modeX();            // Switch to VGA Mode X
     palette(9, 9, 21);  // Initialize color palette in the 8-8-4 RGB format, adding up to 256 colors.
-
-    kbd_start();    // Initialize keyboard input
+    kbd_start();        // Initialize keyboard input
     
-    mouseLimits(0, 319, 0, 239);
-    mousePos(160, 120);
+    mouseLimits(0, SCREEN_WIDTH - 1, 0, SCREEN_HEIGHT - 1);
+    mousePos(HALF_WIDTH, HALF_HEIGHT);
 
     lastClockUpdate = clock();
     /*                  */
@@ -102,12 +101,11 @@ int main(int argc, char *argv[])
         if (playerMovement == true)
         {
             // Clear level and distance buffers
-            memset(level_buffer, BACKGROUND_COLOR, 76800);
-            memset(dist_buffer, 0x43, 307200);  // Sets each pixel in distance buffer to 195.263f. (MAXIMUM VIEW DISTANCE)
-
+            memset(level_buffer, BACKGROUND_COLOR, SCREEN_SIZE);
+            memset(dist_buffer, 0x3B, SCREEN_SIZE_T4);  // Sets each pixel in distance buffer to 0.00286 (Inverse of 350.0273, which is the maximum view distance.)
             checkRootNode(playerPos.x, camPosY, playerPos.z, true, &cameraLeaf);
         }
-        memcpy(col_buffer, level_buffer, 76800);    // Copies level buffer to the color buffer, even if the level hasn't been regenerated.
+        memcpy(col_buffer, level_buffer, SCREEN_SIZE);    // Copies level buffer to the color buffer, even if the level hasn't been regenerated.
 
         // Draw GUI
         drawimage(imgnumber[4], 0, 208);    // HP
@@ -122,35 +120,35 @@ int main(int argc, char *argv[])
             snprintf(debug_line[2], CHAT_LINE_WITHNULL, "WARNING, physics are buggy! Press V to toggle physics.");
 
         displayAllText();
+        //drawMemory(frames);   // This function displays the game's RAM as one byte per pixel. In simple words, this shows clown vomit.
 
         playerMovement = false;
         if (mouseDetect == false) drawimage(imgnumber[6], mouseX, mouseY);
-        if (kbd_keyPressed(ESC) && !chat_mode) endGameLoop = true;
+        if (kbd_keyDown(ESC) && !chat_mode) endGameLoop = true;
         if (!endGameLoop)
         {
             // It's time to write to VGA memory!
             for (i = 0; i < 4; i++) // i = Mode X Plane
             {
                 outp(SC_DATA, 1 << i);                              // The outp() function is expensive, so it's called only four times per frame.
-                for (j = i; j < 76800; j += 4)                      // Draw 1/4th of the screen
+                for (j = i; j < SCREEN_SIZE; j += 4)                // Draw 1/4th of the screen
                     VGA[nonVisible + (j >> 2)] = col_buffer[0][j];  // Set pixel from color buffer to VGA memory
             }
             flip(); // Flip Mode X pages
-            frames++; seconds += deltaTime; // Increase frame count by one and seconds by the delta time.
+            frames++; seconds += deltaTime; // Increase frame count by one and increase seconds by the delta time.
         }
     }
 
     kbd_finish();       // End keyboard input
     videoMode(0x03);    // Return to Text Mode
-    logfile();          // Print a text file containing game statistics
+    logfile();          // Create a text file containing technical game statistics
 
     // Free a bunch of RAM before we exit the game
     free_mapdata();
     free_images();
     free_fonts();
-    free_textures();
 
-    //  These are error messages:
+    // These are error messages:
     switch (errormessage)
     {
         case 0:

@@ -28,6 +28,8 @@
 #define SCREEN_HEIGHT   240
 #define HALF_WIDTH      160
 #define HALF_HEIGHT     120
+#define SCREEN_SIZE     76800
+#define SCREEN_SIZE_T4  307200
 
 typedef struct
 {
@@ -50,8 +52,8 @@ int nonVisible;
 
 color* blend_map;
 color* multiply_map;
-float dist_buffer[240][320];
-unsigned char level_buffer[240][320], col_buffer[240][320];
+float dist_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+unsigned char level_buffer[SCREEN_HEIGHT][SCREEN_WIDTH], col_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 static inline void videoMode(uint8_t mode);
 static inline void pixel(const int, const int, const char);

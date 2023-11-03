@@ -1,8 +1,8 @@
 #ifndef PHYS_H
 #define PHYS_H
 
-float g_constant = -9.81f;
-float terminal_velocity = -67.056f;
+float gravityVelocity = -9.81f;
+float terminalVelocity = -67.056f;
 float playerJumpVelocity = 4.0f;
 
 float acceleration, maxSpeed;
