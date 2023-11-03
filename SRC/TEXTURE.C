@@ -32,29 +32,28 @@ void load_temptexture(image sourceImage)    // Texture MUST be a power of two. O
     }
 }
 
-void texture_hline(const int y, int x1, int x2, float z1, float z2, float u1, float u2, float v1, float v2) // Only draw a line given that Z, U, and V are inversed and interpolated.
+void texture_hline(const int y, int x1, int x2, float z, float u, float v) // Only draw a line given that Z, U, and V are inversed and interpolated.
 {
-    float slope[3], i;
-    int color, u, v;
+    float i;
+    int color;
     float *dist_pointer = dist_buffer[y];
     char *level_pointer = level_buffer[y];
 
-    i = 1.0f / (x2 - x1);
-    slope[0] = (z2 - z1) * i; slope[1] = (u2 - u1) * i; slope[2] = (v2 - v1) * i;
+    //i = 1.0f / (x2 - x1);
+    //lineSlope[0] = (z2 - z1) * i; lineSlope[1] = (u2 - u1) * i; lineSlope[2] = (v2 - v1) * i;
     if (x1 < 0)
     {
-        z1 -= slope[0] * x1; u1 -= slope[1] * x1; v1 -= slope[2] * x1;
+        z -= lineSlope[0] * x1; u -= lineSlope[1] * x1; v -= lineSlope[2] * x1;
         x1 = 0;
     }
     if (x2 >= SCREEN_WIDTH) x2 = SCREEN_WIDTH - 1;
 
     while (x1 <= x2)
     {
-        if (dist_pointer[x1] <= z1)
+        if (dist_pointer[x1] <= z)
         {
-            i = 1.0f / z1;
-            u = u1 * i; v = v1 * i;
-            color = tempimgdata[(u & bit_imgwidth) + (v & bit_imgsize)].c;
+            i = 1.0f / z;
+            color = tempimgdata[((int)(u * i) & bit_imgwidth) + ((int)(v * i) & bit_imgsize)].c;
 
             // Uncomment everything below in this if-statement if you want rendered triangles to support transparency and shading.
 
@@ -62,32 +61,38 @@ void texture_hline(const int y, int x1, int x2, float z1, float z2, float u1, fl
             // {
             // level_pointer[x1] = multiplyColor(color, luminance);
             level_pointer[x1] = color;
-            dist_pointer[x1] = z1;
+            dist_pointer[x1] = z;
             // }
         }
-        z1 += slope[0]; u1 += slope[1]; v1 += slope[2];
+        z += lineSlope[0]; u += lineSlope[1]; v += lineSlope[2];
         x1++;
     }
 }
 
 void drawHalfTri(int startEdge, int y0, int *y1, int triHalf)//, int x1minx0)  // This function draws either the top or bottom half of a 2D triangle
 {
-    int i;
-    reversed = (slope[0][1] < slope[0][0]) ? triHalf ^ 1 : triHalf;
-    notReversed = reversed ^ 1;
-    edge[0][1] = startEdge;
+    int i;	float j;
+    int endL = (triSlope[1] < triSlope[0]) ? triHalf ^ 1 : triHalf;
+    int endR = endL ^ 1;
+    triEdge[1] = startEdge;
     if (y0 < 0)
     {
         for (i = 0; i < 8; i++)
-            edge[0][i] -= slope[0][i] * y0;
+            triEdge[i] -= triSlope[i] * y0;
         y0 = 0;
     }
     if (*y1 > SCREEN_HEIGHT) *y1 = SCREEN_HEIGHT;
+	
+	j = 1.0f / (triSlope[endR] - triSlope[endL]);
+	lineSlope[0] = (triSlope[endR+2] - triSlope[endL+2]) * j;
+	lineSlope[1] = (triSlope[endR+4] - triSlope[endL+4]) * j;
+	lineSlope[2] = (triSlope[endR+6] - triSlope[endL+6]) * j;
+	
     while (y0 < *y1)
     {
-        texture_hline(y0, edge[0][reversed], edge[0][notReversed], edge[1][reversed], edge[1][notReversed], edge[2][reversed], edge[2][notReversed], edge[3][reversed], edge[3][notReversed]);
+        texture_hline(y0, triEdge[endL], triEdge[endR], triEdge[endL+2], triEdge[endL+4], triEdge[endL+6]);
         for (i = 0; i < 8; i++)
-            edge[0][i] += slope[0][i];
+            triEdge[i] += triSlope[i];
         y0++;
     }
 }
@@ -115,29 +120,29 @@ void texture_twodimtri(int x0, int x1, int x2, int y0, int y1, int y2, float z0,
     if (y2 >= 0 && y0 < SCREEN_HEIGHT)    // If triangle is inside the screen's vertical boundaries
     {
         k = 1.0f / (y2 - y0);
-        slope[0][0] = (x2 - x0) * k; slope[1][0] = (z2 - z0) * k;
-        slope[2][0] = (u2 - u0) * k; slope[3][0] = (v2 - v0) * k;
-        edge[0][0] = x0; edge[1][0] = z0; edge[2][0] = u0; edge[3][0] = v0;
+        triSlope[0] = (x2 - x0) * k; triSlope[2] = (z2 - z0) * k;
+        triSlope[4] = (u2 - u0) * k; triSlope[6] = (v2 - v0) * k;
+        triEdge[0] = x0; triEdge[2] = z0; triEdge[4] = u0; triEdge[6] = v0;
         if (y0 != y1)
         {
-            edge[1][1] = z0; edge[2][1] = u0; edge[3][1] = v0;
+            triEdge[3] = z0; triEdge[5] = u0; triEdge[7] = v0;
             if (y1 > -1)
             {
                 k = 1.0f / (y1 - y0);
-                slope[0][1] = (x1 - x0) * k; slope[1][1] = (z1 - z0) * k;
-                slope[2][1] = (u1 - u0) * k; slope[3][1] = (v1 - v0) * k;
+                triSlope[1] = (x1 - x0) * k; triSlope[3] = (z1 - z0) * k;
+                triSlope[5] = (u1 - u0) * k; triSlope[7] = (v1 - v0) * k;
                 drawHalfTri(x0, y0, &y1, TRI_TOP_HALF);
             }
             else
                 for (i = 0; i < 8; i++)
-                    edge[0][i] += slope[0][i] * (y1 - y0);
+                    triEdge[i] += triSlope[i] * (y1 - y0);
         }
         if (y1 < SCREEN_HEIGHT && y1 != y2)
         {
-            edge[1][1] = z1; edge[2][1] = u1; edge[3][1] = v1;
+            triEdge[3] = z1; triEdge[5] = u1; triEdge[7] = v1;
             k = 1.0f / (y2 - y1);
-            slope[0][1] = (x2 - x1) * k; slope[1][1] = (z2 - z1) * k;
-            slope[2][1] = (u2 - u1) * k; slope[3][1] = (v2 - v1) * k;
+            triSlope[1] = (x2 - x1) * k; triSlope[3] = (z2 - z1) * k;
+            triSlope[5] = (u2 - u1) * k; triSlope[7] = (v2 - v1) * k;
             drawHalfTri(x1, y1, &y2, TRI_BOTTOM_HALF);
         }
     }
@@ -147,8 +152,8 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
 {
     int i, j, k, cx[4], cy[4];
     float pu[3], pv[3], cz[4], cu[4], cv[4];
-    float slope, intercept, inverse, n_vector, lightDot;
-    vert normal, p[3], diff, edge1, edge2, lightDir;
+    float slope, intercept, inverse, lightDot;
+    vert normal, p[3], diff, edge[2], lightDir;
 
     // Precalculate sine and cosine of player rotation.
     const float cos_camx = cos(camRotX), cos_camy = cos(camRotY),
@@ -186,14 +191,13 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
     if (behindZ < 3)    // If at least one vertex is in front of the camera:
     {
         // Calculate surface normals
-        edge1.x = p[2].x - p[0].x; edge1.y = p[2].y - p[0].y; edge1.z = p[2].z - p[0].z;
-        edge2.x = p[1].x - p[0].x; edge2.y = p[1].y - p[0].y; edge2.z = p[1].z - p[0].z;
-        cross(edge1, edge2, &normal);
+        edge[0].x = p[2].x - p[0].x;	edge[0].y = p[2].y - p[0].y;	edge[0].z = p[2].z - p[0].z;
+        edge[1].x = p[1].x - p[0].x;	edge[1].y = p[1].y - p[0].y;	edge[1].z = p[1].z - p[0].z;
+        cross(edge[0], edge[1], &normal);
         normalize(&normal);
-        n_vector = dot(normal, p[0]);
 
         // If the surface normal is facing towards the camera:
-        if (n_vector < alpha_toggle)
+        if (dot(normal, p[0]) < alpha_toggle)
         {
             lightDir.x = 0.0f; lightDir.y = 0.0f; lightDir.z = -1.0f;
             lightDot = -dot(normal, lightDir);

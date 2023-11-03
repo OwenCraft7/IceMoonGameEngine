@@ -11,7 +11,7 @@ int bit_imgwidth, bit_imgsize;
 float f_width, f_size;
 
 int reversed, notReversed;
-float slope[4][2], edge[4][2];
+float triSlope[8], triEdge[8], lineSlope[3];
 
 enum triHalves
 {

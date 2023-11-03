@@ -14,9 +14,10 @@ You must have the following specifications to run this engine:
 -	RAM:	8 MB+
 -	GPU:	VGA or better
 -	OS:	MS-DOS 5.0+
--	Storage: (Updated as of August 2 2023)
-	- If you just want to play the game:	At least 557 KB
-	- If you want to modify the code too:	At least 11.3 MB
+-	Storage: (Updated as of November 3 2023)
+	- BIN Folder:					434 KB
+	- ICESRC Folder:				876 KB
+	- ICESRC and WATCOM Folders:	11.6 MB
 
 First, rename the extracted IceMoonGameEngine-main folder to ICESRC, then place it in your DOS C: drive. Next, in DOS, go to the ICESRC directory and type "play". You can also go to the BIN directory and type "icemoon" to do the same thing.
 
