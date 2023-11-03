@@ -23,15 +23,20 @@ First, rename the extracted IceMoonGameEngine-main folder to ICESRC, then place 
   ------
 
 For Windows users using DOSBox, a shortcut is provided for your pleasure, along with these instructions.
-(These instructions are not compatible with DOSBox-X. You can instead click "Open with DOSBox-X" in your right-click menu.)
+
+**DOSBox 0.74-3:**
 
 First, open "ICEMOON.CONF", scroll to the bottom, and change the file path after "mount c" to your DOSBox C: drive location. Next, right click "ICEMOON.CONF" and click "Copy As Path", then open the shortcut's properties. Select everything after "-conf" in "Target:" and paste your text.
 
 If you don't have DOSBox version 0.74-3, change "DOSBox-0.74-3" in both "Target:" and "Start in:" to your version. (You'll want to change your DOSBox installation path too if it doesn't match the one in the properties.) Finally, open the shortcut.
 
-If you just want to play the engine, you're pretty much done here. However, if you want to modify the source code, follow these steps:
+**DOSBox-X:**
+
+Follow the same steps as above, except you'll need "ICEMOONX.CONF" and "DOSBOX-X" instead.
 
   ------
+
+If you just want to play the engine, you're pretty much done here. However, if you want to modify the source code, follow these steps:
 
 Install Open Watcom 2.0 from this link:
 
