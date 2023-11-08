@@ -9,7 +9,8 @@ A mod folder contains files ranging in different types. Here are the different f
 
 -	.BIN Binary file:
 
-	Binary files located in the "GUI\FONTS" directory are used in conjunction with the game's fonts. They are each 128 bytes long, or 256 nybbles, and each nybble determines a character's pixel width in its font image.
+	 In the GUI\FONTS folder, .BIN files are used in conjunction with the game's fonts. They are each 128 bytes long, or 256 nybbles, and each nybble determines a character's pixel width in its font image.
+
 
 -	.BMP Bitmap image (8-bit only):
 	
@@ -20,6 +21,16 @@ A mod folder contains files ranging in different types. Here are the different f
 	To comply with the game's 256 color palette, all images are converted to an 8-8-4 RGB format before it's in RAM:
 	8 levels for red, 8 levels for green, and 4 levels for blue. (8 x 8 x 4 = 256)
 
+
 -	.POS Ice Moon post-compiled map file:
 
-	Read more about its documentation in POSFILE.MD.
+	.POS files are post-compiled map files located in the MAPS folder.
+	
+	Read more about their documentation in POSFILE.MD.
+
+
+-	.TXT Text file:
+
+	In the GUI folder, text files are used to set up specific GUI screens, such as the title screen, main HUD, debug info, and more.
+	
+	Read more about their documentation in GUI.MD.

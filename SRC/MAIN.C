@@ -16,16 +16,18 @@
 #include <dos.h>
 #include <memory.h>
 #include <time.h>
+#include <graph.h>
 
 #include "MISC.C"       // Miscellaneous.
 #include "TIME.C"       // Calculates the delta time and FPS.
 #include "SOUND.C"      // Handles SFX and music.
 #include "GFX.C"        // Code for graphics, loading, and drawing images. Some of the code comes from Brackeen's VGA tutorial.
 #include "POSFILE.C"    // Loads maps.
-#include "TEXT.C"       // Prints text for chat, debug, HUD, menus, and subtitles.
 #include "TEXTURE.C"    // Draws triangles from the node leaves.
 #include "NODES.C"      // Involved with the BSP tree; checks node planes and draws node leaves.
 #include "PHYS.C"       // Game Physics.
+#include "TEXT.C"       // Prints text for chat, debug, HUD, menus, and subtitles.
+#include "GUI.C"        // Code for the Graphical User Interface.
 #include "MOUSE.C"      // Input from mouse.
 #include "INPUT.C"      // Input from keyboard. INPUT.C & INPUT.H are from Krzysztof Kondrak's DOS3D program.
 #include "LOGFILE.C"    // Prints a log file after the game ends.
@@ -34,9 +36,17 @@ int main(int argc, char *argv[])
 {
     int i, j;   // Used with for-statements and other
 
+    _clearscreen(_GCLEARSCREEN);
+    setbuf(stdout, NULL);
+    printf("LOADING ICE MOON\n\nDetecting SoundBlaster...");
     sb_detected = sb_detect();                      // Detect if SoundBlaster is in computer (or DOS emulator)
+
+    printf("\nDetecting Mouse...");
     mouseDetect = mouseInit() == 0 ? false : true;  // Detect if there's a mouse connected. Will be set true if connected.
+    printf("\nLoading Config...");
     loadCfg();                                      // Load the configuration file and its settings
+    printf("\nLoading GUI Screens...");
+    loadGUIScreens();
 
     // ARGUMENTS FROM COMMAND LINE:
     for (i = 1; i < argc; i++)
@@ -47,8 +57,10 @@ int main(int argc, char *argv[])
             noclip = true;
     }
 
+    printf("\nLoading Map...");
     load_pos("MAPS/TEST2.POS"); // Load map #2 in the EXAMPLE folder
 
+    printf("\nLoading Fonts...");
     font_count = 3;
     fontnumber = calloc(font_count, sizeof(image)); // Allocate memory for fonts to be loaded
     fontnumber_vwf = calloc(font_count, sizeof(vwf_settings));
@@ -56,6 +68,7 @@ int main(int argc, char *argv[])
     loadfont("DEBUG_0", FONT_DEBUG);
     loadfont("GUI_0", FONT_GUI);
 
+    printf("\nLoading Images...");
     img_count = 9;
     imgnumber = calloc(img_count, sizeof(image));   // Allocate memory for images to be loaded
     loadimage("NULL.BMP", &imgnumber[0]);
@@ -66,7 +79,7 @@ int main(int argc, char *argv[])
     loadimage("GUI/AMMO.BMP", &imgnumber[5]);           // Ammo in the screen's bottom-right corner
     loadimage("GUI/CURSOR.BMP", &imgnumber[6]);         // A mouse cursor
     loadimage("GUI/TYPE.BMP", &imgnumber[7]);           // A text cursor
-    loadimage("TEXTURES/WIREFRME.BMP", &imgnumber[8]);  // A placeholder wireframe texture
+    loadimage("GUI/QUIT.BMP", &imgnumber[8]);  // A placeholder wireframe texture
 
     // Shortcuts to the blend and multiply colormaps. Each colormap is 256x256 pixels in size.
     blend_map = imgnumber[1].pixel;
@@ -93,38 +106,48 @@ int main(int argc, char *argv[])
     while (!endGameLoop)
     {
         updateDeltaTime();                          // Update delta time
-        if (secondsUpdate < seconds) updateFPS();   // Update frames per second
-
-        inputKeyboard();        // Get Player Input
-        playerPhysicsUpdate();  // Update Player Physics
-        
-        if (playerMovement == true)
+        if (!paused)
         {
-            // Clear level and distance buffers
-            memset(level_buffer, BACKGROUND_COLOR, SCREEN_SIZE);
-            memset(dist_buffer, 0x3B, SCREEN_SIZE_T4);  // Sets each pixel in distance buffer to 0.00286 (Inverse of 350.0273, which is the maximum view distance.)
-            checkRootNode(playerPos.x, camPosY, playerPos.z, true, &cameraLeaf);
+            if (secondsUpdate < seconds) updateFPS();   // Update frames per second
+
+            inputKeyboard();        // Get Player Input
+            playerPhysicsUpdate();  // Update Player Physics
+
+            if (playerMovement == true)
+            {
+                // Clear level and distance buffers
+                memset(level_buffer, BACKGROUND_COLOR, SCREEN_SIZE);
+                memset(dist_buffer, 0x3B, SCREEN_SIZE_T4);  // Sets each pixel in distance buffer to 0.00286 (Inverse of 350.0273, which is the maximum view distance.)
+                checkRootNode(playerPos.x, camPosY, playerPos.z, true, &cameraLeaf);
+            }
+            playerMovement = false;
+            memcpy(col_buffer, level_buffer, SCREEN_SIZE);    // Copies level buffer to the color buffer, even if the level hasn't been regenerated.
+            if (kbd_keyPressed(ESC) && !chat_mode)
+            {
+                paused = true;
+                activeGUIScreen = 2;
+                mousePos(HALF_WIDTH, HALF_HEIGHT); // Center the mouse.
+            }
+            frames++; seconds += deltaTime; // Increase frame count by one and increase seconds by the delta time.
         }
-        memcpy(col_buffer, level_buffer, SCREEN_SIZE);    // Copies level buffer to the color buffer, even if the level hasn't been regenerated.
+        else
+        {
+            if (kbd_keyPressed(Y))
+                endGameLoop = true;
+            else if (kbd_keyPressed(N))
+            {
+                paused = false;
+                activeGUIScreen = 1;
+                mousePos(HALF_WIDTH, HALF_HEIGHT); // Center the mouse.
+            }
+        }
 
         // Draw GUI
-        drawimage(imgnumber[4], 0, 208);    // HP
-        drawimage(imgnumber[5], 288, 208);  // Ammo
-        drawimage(imgnumber[3], 156, 116);  // Crosshair
-
-        snprintf(debug_line[0], CHAT_LINE_WITHNULL, "FPS: %d, X: %.2f, Y: %.2f, Z: %.2f", framesPerSecond, playerPos.x, playerPos.y, playerPos.z);
-        snprintf(debug_line[1], CHAT_LINE_WITHNULL, "Noclip: %d, Player Movement: %d, Map ID: %d", noclip, playerMovement, mapNumber);
-        if (argc == 2)
-            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "argc: %d, argv1: %s", argc, argv[1]);
-        else
-            snprintf(debug_line[2], CHAT_LINE_WITHNULL, "WARNING, physics are buggy! Press V to toggle physics.");
-
-        displayAllText();
+        showGUIScreen(activeGUIScreen);
+        setupText();
         //drawMemory(frames);   // This function displays the game's RAM as one byte per pixel. In simple words, this shows clown vomit.
-
-        playerMovement = false;
-        if (mouseDetect == false) drawimage(imgnumber[6], mouseX, mouseY);
-        if (kbd_keyDown(ESC) && !chat_mode) endGameLoop = true;
+        //if (mouseDetect == false) drawimage(imgnumber[6], mouseX, mouseY);
+        
         if (!endGameLoop)
         {
             // It's time to write to VGA memory!
@@ -135,7 +158,6 @@ int main(int argc, char *argv[])
                     VGA[nonVisible + (j >> 2)] = col_buffer[0][j];  // Set pixel from color buffer to VGA memory
             }
             flip(); // Flip Mode X pages
-            frames++; seconds += deltaTime; // Increase frame count by one and increase seconds by the delta time.
         }
     }
 
@@ -144,9 +166,10 @@ int main(int argc, char *argv[])
     logfile();          // Create a text file containing technical game statistics
 
     // Free a bunch of RAM before we exit the game
-    free_mapdata();
-    free_images();
     free_fonts();
+    free_gui();
+    free_images();
+    free_mapdata();
 
     // These are error messages:
     switch (errormessage)
@@ -168,6 +191,9 @@ int main(int argc, char *argv[])
             break;
         case 5:
             printf("ERROR: Couldn't generate log file; the disk space the game is in could be read-only. Estimated RAM is also set to 0.");
+            break;
+        case 6:
+            printf("ERROR: Failed to load GUI screens.");
             break;
         default:
             printf("ERROR: Unknown, check source code for any problems.");

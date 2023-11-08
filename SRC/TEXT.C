@@ -71,36 +71,27 @@ void printtext(const char* text, int number, const int x, const int y)  // Print
     }
 }
 
-void displayAllText() // Prints everything text-related on screen
+void setupText() // Prints everything text-related on screen
 {
     int i;
-    for (i = 0; i < 3; i++)
-        printtext(debug_line[i], FONT_DEBUG, 0, i * 8);
+
+    snprintf(debug_line[0], CHAT_LINE_WITHNULL, "FPS: %d, X: %.2f, Y: %.2f, Z: %.2f", framesPerSecond, playerPos.x, playerPos.y, playerPos.z);
+    snprintf(debug_line[1], CHAT_LINE_WITHNULL, "Noclip: %d, Player Movement: %d, Map ID: %d", noclip, playerMovement, mapNumber);
+    snprintf(debug_line[2], CHAT_LINE_WITHNULL, "WARNING, physics are buggy! Press V to toggle physics.");
+
     for (i = 0; i < 20; i++)
-        if (chat_mode || chat_timer[i] > 0.0f)
-        {
-            printtext(chat_line[i], FONT_CHAT, 0, i * 8 + 24);
-            chat_timer[i] -= deltaTime;
-        }
-    if (chat_mode)
+        chat_timer[i] -= deltaTime;
+    if (chat_mode && typeCursorVisible)
     {
-        printtext(type_line, FONT_CHAT, 0, 200);
-        if (typeCursorVisible)
-        {
-            typeXPosition_Screen = 0;
-            for (i = 0; i < typeXPosition_Text; i++)  // This focuses on the chat text cursor
-                typeXPosition_Screen += fontnumber_vwf[FONT_CHAT].charcode[(int)type_line[i]];
-            drawimage(imgnumber[7], typeXPosition_Screen, 200);
-        }
+        typeXPosition_Screen = 0;
+        for (i = 0; i < typeXPosition_Text; i++)  // This focuses on the chat text cursor
+            typeXPosition_Screen += fontnumber_vwf[FONT_CHAT].charcode[(int)type_line[i]];
+        drawimage(imgnumber[7], typeXPosition_Screen, 200);
     }
-    snprintf(HPMaxString, 4, "%03d", playerHPMax);
     snprintf(HPCurrentString, 4, "%03d", playerHPCurrent);
+    snprintf(HPMaxString, 4, "%03d", playerHPMax);
     snprintf(AmmoLoadedString, 4, "%03d", playerAmmoLoaded);
     snprintf(AmmoUnloadedString, 4, "%03d", playerAmmoUnloaded);
-    printtext(HPCurrentString, FONT_GUI, 32, 208);
-    printtext(HPMaxString, FONT_GUI, 32, 224);
-    printtext(AmmoLoadedString, FONT_GUI, 252, 208);
-    printtext(AmmoUnloadedString, FONT_GUI, 252, 224);
 }
 
 void scrollChatUp()

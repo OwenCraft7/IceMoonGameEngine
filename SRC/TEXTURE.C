@@ -39,15 +39,12 @@ void texture_hline(const int y, int x1, int x2, float z, float u, float v) // On
     float *dist_pointer = dist_buffer[y];
     char *level_pointer = level_buffer[y];
 
-    //i = 1.0f / (x2 - x1);
-    //lineSlope[0] = (z2 - z1) * i; lineSlope[1] = (u2 - u1) * i; lineSlope[2] = (v2 - v1) * i;
     if (x1 < 0)
     {
         z -= lineSlope[0] * x1; u -= lineSlope[1] * x1; v -= lineSlope[2] * x1;
         x1 = 0;
     }
     if (x2 >= SCREEN_WIDTH) x2 = SCREEN_WIDTH - 1;
-
     while (x1 <= x2)
     {
         if (dist_pointer[x1] <= z)
@@ -133,8 +130,7 @@ void texture_twodimtri(int x0, int x1, int x2, int y0, int y1, int y2, float z0,
                 triSlope[5] = (u1 - u0) * k; triSlope[7] = (v1 - v0) * k;
                 drawHalfTri(x0, y0, &y1, TRI_TOP_HALF);
             }
-            else
-                for (i = 0; i < 8; i++)
+            else for (i = 0; i < 8; i++)
                     triEdge[i] += triSlope[i] * (y1 - y0);
         }
         if (y1 < SCREEN_HEIGHT && y1 != y2)
@@ -227,8 +223,8 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                 j = k = 0;
                 for (i = 0; i < 3; i++) // For each vertex:
                 {
-                    if (p[i].z >= NEAR_CLIP)
-                    {
+                    if (p[i].z >= NEAR_CLIP)    // If vertex is in front of camera...
+                    {                           // Calculate its X and Y position as well as UV coordinates.
                         inverse = 1.0f / p[i].z;
                         cz[j] = inverse;
                         cu[j] = pu[i] * inverse;
@@ -238,8 +234,7 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                         cy[j] = p[i].y * -inverse + HALF_HEIGHT;  // Set Y on screen
                         j += 1;
                     }
-                    else
-                        k = i;
+                    else k = i; // K will equal the single vertex behind the camera.
                 }
                 if (k == 0)
                 {
@@ -258,7 +253,9 @@ void texture_tri(const tri triangle, vert* sourceVert, uv* sourceUV, image* sour
                     swapfloat(&pv[1], &pv[2]);
                 }
 
-                for (i = 2; i < 4; i++)
+                // Now that vertex #2 is the only one behind the camera, it is then
+                // converted into two vertices that reside on any side of the screen.
+                for (i = 2; i < 4; i++) // For vertices #2 and #3...
                 {
                     j = 3 - i;
 

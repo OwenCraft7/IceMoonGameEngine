@@ -93,7 +93,7 @@ vert prevPlayerPos;
 float camRotX, camRotY, camPosY, headPosY;
 
 // Miscellaneous Properties
-bool endGameLoop = false, noclip, paused, chat_mode, typeCursorVisible;
+bool endGameLoop = false, noclip = false, paused = false, chat_mode = false, typeCursorVisible;
 int mapNumber = 1, mapNumSwitch, errormessage;
 
 int playerHPCurrent = 100, playerAmmoLoaded = 24;
